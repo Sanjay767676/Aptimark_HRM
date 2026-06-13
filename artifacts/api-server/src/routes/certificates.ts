@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, certificatesTable, studentsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 const router = Router();
 
@@ -8,16 +8,17 @@ router.get("/certificates", async (req, res) => {
   try {
     const { status, student_id } = req.query as Record<string, string>;
 
-    const certs = await db.select().from(certificatesTable);
-    const students = await db.select().from(studentsTable);
-    const studentMap = new Map(students.map((s) => [s.id, s]));
+    const conditions = [];
+    if (status) conditions.push(eq(certificatesTable.status, status));
+    if (student_id) conditions.push(eq(certificatesTable.studentId, student_id));
 
-    let result = certs.map((c) => ({ ...c, student: studentMap.get(c.studentId) ?? null }));
+    const rows = await db
+      .select({ cert: certificatesTable, student: studentsTable })
+      .from(certificatesTable)
+      .leftJoin(studentsTable, eq(studentsTable.id, certificatesTable.studentId))
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
 
-    if (status) result = result.filter((c) => c.status === status);
-    if (student_id) result = result.filter((c) => c.studentId === student_id);
-
-    res.json(result);
+    res.json(rows.map(({ cert, student }) => ({ ...cert, student: student ?? null })));
   } catch (err) {
     req.log.error({ err }, "Error listing certificates");
     res.status(500).json({ error: "Internal server error" });
@@ -26,7 +27,7 @@ router.get("/certificates", async (req, res) => {
 
 router.post("/certificates", async (req, res): Promise<void> => {
   try {
-    const { student_id } = req.body as { student_id: string; issue_date?: string };
+    const { student_id } = req.body as { student_id: string };
 
     if (!student_id) {
       res.status(400).json({ error: "student_id is required" });
@@ -58,22 +59,18 @@ router.post("/certificates", async (req, res): Promise<void> => {
 router.get("/certificates/:id", async (req, res): Promise<void> => {
   try {
     const { id } = req.params;
-    const [cert] = await db
-      .select()
+    const [row] = await db
+      .select({ cert: certificatesTable, student: studentsTable })
       .from(certificatesTable)
+      .leftJoin(studentsTable, eq(studentsTable.id, certificatesTable.studentId))
       .where(eq(certificatesTable.id, id));
 
-    if (!cert) {
+    if (!row) {
       res.status(404).json({ error: "Certificate not found" });
       return;
     }
 
-    const [student] = await db
-      .select()
-      .from(studentsTable)
-      .where(eq(studentsTable.id, cert.studentId));
-
-    res.json({ ...cert, student: student ?? null });
+    res.json({ ...row.cert, student: row.student ?? null });
   } catch (err) {
     req.log.error({ err }, "Error getting certificate");
     res.status(500).json({ error: "Internal server error" });
@@ -100,10 +97,7 @@ router.patch("/certificates/:id", async (req, res): Promise<void> => {
       return;
     }
 
-    const [student] = await db
-      .select()
-      .from(studentsTable)
-      .where(eq(studentsTable.id, updated.studentId));
+    const [student] = await db.select().from(studentsTable).where(eq(studentsTable.id, updated.studentId));
 
     res.json({ ...updated, student: student ?? null });
   } catch (err) {

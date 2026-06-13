@@ -6,6 +6,27 @@ import { logger } from "./lib/logger";
 
 const app: Express = express();
 
+// Cross-env CORS: allow Replit domains in prod, all origins in dev
+const replitDomains = (process.env["REPLIT_DOMAINS"] ?? "")
+  .split(",")
+  .map((d) => d.trim())
+  .filter(Boolean)
+  .map((d) => `https://${d}`);
+
+const isDev = process.env["NODE_ENV"] !== "production";
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true); // server-to-server / curl
+      if (isDev) return callback(null, true); // allow all in dev
+      if (replitDomains.includes(origin)) return callback(null, true);
+      callback(new Error(`CORS: origin not allowed: ${origin}`));
+    },
+    credentials: true,
+  }),
+);
+
 app.use(
   pinoHttp({
     logger,
@@ -25,7 +46,6 @@ app.use(
     },
   }),
 );
-app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

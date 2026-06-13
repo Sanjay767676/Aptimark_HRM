@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, studentsTable, paymentsTable, insertStudentSchema } from "@workspace/db";
-import { eq, ilike, or, desc } from "drizzle-orm";
+import { eq, ilike, or, desc, and, sql } from "drizzle-orm";
 
 const router = Router();
 
@@ -11,41 +11,43 @@ router.get("/students", async (req, res) => {
     const limitNum = Math.min(100, Math.max(1, parseInt(limit)));
     const offset = (pageNum - 1) * limitNum;
 
-    let studentsQuery = db
-      .select()
-      .from(studentsTable)
-      .orderBy(desc(studentsTable.createdAt))
-      .$dynamic();
-
+    // Build WHERE conditions pushed into SQL (no in-memory filtering)
+    const conditions: ReturnType<typeof and>[] = [];
     if (search) {
-      studentsQuery = studentsQuery.where(
+      conditions.push(
         or(
           ilike(studentsTable.fullName, `%${search}%`),
           ilike(studentsTable.email, `%${search}%`),
-          ilike(studentsTable.internshipRole, `%${search}%`)
-        )
-      ) as typeof studentsQuery;
-    }
-
-    const allStudents = await studentsQuery;
-    const payments = await db.select().from(paymentsTable);
-    const paymentMap = new Map(payments.map((p) => [p.studentId, p]));
-
-    let studentsWithPayments = allStudents.map((s) => ({
-      ...s,
-      payment: paymentMap.get(s.id) ?? null,
-    }));
-
-    if (status) {
-      studentsWithPayments = studentsWithPayments.filter(
-        (s) => s.payment?.paymentStatus === status
+          ilike(studentsTable.internshipRole, `%${search}%`),
+        ) as ReturnType<typeof and>,
       );
     }
+    if (status) {
+      conditions.push(eq(paymentsTable.paymentStatus, status) as unknown as ReturnType<typeof and>);
+    }
 
-    const total = studentsWithPayments.length;
-    const paged = studentsWithPayments.slice(offset, offset + limitNum);
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
 
-    res.json({ data: paged, total, page: pageNum, limit: limitNum });
+    // Single LEFT JOIN query — no separate payments fetch, no in-memory join
+    const [rows, countRows] = await Promise.all([
+      db
+        .select({ student: studentsTable, payment: paymentsTable })
+        .from(studentsTable)
+        .leftJoin(paymentsTable, eq(paymentsTable.studentId, studentsTable.id))
+        .where(where)
+        .orderBy(desc(studentsTable.createdAt))
+        .limit(limitNum)
+        .offset(offset),
+      db
+        .select({ total: sql<number>`count(*)::int` })
+        .from(studentsTable)
+        .leftJoin(paymentsTable, eq(paymentsTable.studentId, studentsTable.id))
+        .where(where),
+    ]);
+
+    const data = rows.map(({ student, payment }) => ({ ...student, payment: payment ?? null }));
+
+    res.json({ data, total: countRows[0]?.total ?? 0, page: pageNum, limit: limitNum });
   } catch (err) {
     req.log.error({ err }, "Error listing students");
     res.status(500).json({ error: "Internal server error" });
@@ -109,19 +111,18 @@ router.post("/students", async (req, res): Promise<void> => {
 router.get("/students/:id", async (req, res): Promise<void> => {
   try {
     const { id } = req.params;
-    const [student] = await db.select().from(studentsTable).where(eq(studentsTable.id, id));
+    const [row] = await db
+      .select({ student: studentsTable, payment: paymentsTable })
+      .from(studentsTable)
+      .leftJoin(paymentsTable, eq(paymentsTable.studentId, studentsTable.id))
+      .where(eq(studentsTable.id, id));
 
-    if (!student) {
+    if (!row) {
       res.status(404).json({ error: "Student not found" });
       return;
     }
 
-    const [payment] = await db
-      .select()
-      .from(paymentsTable)
-      .where(eq(paymentsTable.studentId, id));
-
-    res.json({ ...student, payment: payment ?? null });
+    res.json({ ...row.student, payment: row.payment ?? null });
   } catch (err) {
     req.log.error({ err }, "Error getting student");
     res.status(500).json({ error: "Internal server error" });

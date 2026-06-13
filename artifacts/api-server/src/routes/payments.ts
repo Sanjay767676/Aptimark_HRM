@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { db, paymentsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { db, paymentsTable, studentsTable } from "@workspace/db";
+import { eq, and } from "drizzle-orm";
 
 const router = Router();
 
@@ -8,14 +8,23 @@ router.get("/payments", async (req, res) => {
   try {
     const { status, student_id } = req.query as Record<string, string>;
 
-    let payments = await db.select().from(paymentsTable);
+    const conditions = [];
+    if (status) conditions.push(eq(paymentsTable.paymentStatus, status));
+    if (student_id) conditions.push(eq(paymentsTable.studentId, student_id));
 
-    if (status) {
-      payments = payments.filter((p) => p.paymentStatus === status);
-    }
-    if (student_id) {
-      payments = payments.filter((p) => p.studentId === student_id);
-    }
+    // Single query with WHERE — no in-memory filtering
+    const [rows] = await Promise.all([
+      db
+        .select({ payment: paymentsTable, student: studentsTable })
+        .from(paymentsTable)
+        .leftJoin(studentsTable, eq(studentsTable.id, paymentsTable.studentId))
+        .where(conditions.length > 0 ? and(...conditions) : undefined),
+    ]);
+
+    const payments = (Array.isArray(rows) ? rows : [rows]).map(({ payment, student }) => ({
+      ...payment,
+      student: student ?? null,
+    }));
 
     res.json(payments);
   } catch (err) {
@@ -27,17 +36,18 @@ router.get("/payments", async (req, res) => {
 router.get("/payments/:id", async (req, res): Promise<void> => {
   try {
     const { id } = req.params;
-    const [payment] = await db
-      .select()
+    const [row] = await db
+      .select({ payment: paymentsTable, student: studentsTable })
       .from(paymentsTable)
+      .leftJoin(studentsTable, eq(studentsTable.id, paymentsTable.studentId))
       .where(eq(paymentsTable.id, id));
 
-    if (!payment) {
+    if (!row) {
       res.status(404).json({ error: "Payment not found" });
       return;
     }
 
-    res.json(payment);
+    res.json({ ...row.payment, student: row.student ?? null });
   } catch (err) {
     req.log.error({ err }, "Error getting payment");
     res.status(500).json({ error: "Internal server error" });
@@ -66,12 +76,7 @@ router.patch("/payments/:id", async (req, res): Promise<void> => {
 
     const [updated] = await db
       .update(paymentsTable)
-      .set({
-        totalFee: String(fee),
-        amountPaid: String(paid),
-        balanceAmount: String(balance),
-        paymentStatus,
-      })
+      .set({ totalFee: String(fee), amountPaid: String(paid), balanceAmount: String(balance), paymentStatus })
       .where(eq(paymentsTable.id, id))
       .returning();
 

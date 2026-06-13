@@ -17,11 +17,28 @@ const PageLoader = () => (
   </div>
 );
 
-const HrLayout = lazy(() => import("@/components/layout/HrLayout"));
+// Layouts
+const HrLayout    = lazy(() => import("@/components/layout/HrLayout"));
 const AdminLayout = lazy(() => import("@/components/layout/AdminLayout"));
 
-const HrDashboard = lazy(() => import("@/pages/hr/Dashboard"));
-const AdminDashboard = lazy(() => import("@/pages/admin/Dashboard"));
+// HR pages
+const HrDashboard    = lazy(() => import("@/pages/hr/Dashboard"));
+const HrStudents     = lazy(() => import("@/pages/hr/Students"));
+const HrNewStudent   = lazy(() => import("@/pages/hr/NewStudent"));
+const HrStudentDetail= lazy(() => import("@/pages/hr/StudentDetail"));
+const HrOfferLetters = lazy(() => import("@/pages/hr/OfferLetters"));
+const HrCertificates = lazy(() => import("@/pages/hr/Certificates"));
+const HrPayments     = lazy(() => import("@/pages/hr/Payments"));
+const HrSettings     = lazy(() => import("@/pages/hr/Settings"));
+
+// Admin pages
+const AdminDashboard    = lazy(() => import("@/pages/admin/Dashboard"));
+const AdminStudents     = lazy(() => import("@/pages/admin/Students"));
+const AdminOfferLetters = lazy(() => import("@/pages/admin/OfferLetters"));
+const AdminCertificates = lazy(() => import("@/pages/admin/Certificates"));
+const AdminPayments     = lazy(() => import("@/pages/admin/Payments"));
+const AdminUsers        = lazy(() => import("@/pages/admin/Users"));
+const AdminSettings     = lazy(() => import("@/pages/admin/Settings"));
 
 const queryClient = new QueryClient();
 
@@ -34,22 +51,37 @@ function AnimatedRoutes() {
         <Switch location={location}>
           <Route path="/login" component={Login} />
 
+          {/* ── HR Portal ─────────────────────────────── */}
           <Route path="/hr/*">
             <ProtectedRoute allowedRoles={['hr']}>
               <HrLayout>
                 <Switch>
-                  <Route path="/hr/dashboard" component={HrDashboard} />
+                  <Route path="/hr/dashboard"     component={HrDashboard} />
+                  <Route path="/hr/students/new"  component={HrNewStudent} />
+                  <Route path="/hr/students/:id"  component={HrStudentDetail} />
+                  <Route path="/hr/students"      component={HrStudents} />
+                  <Route path="/hr/offer-letters" component={HrOfferLetters} />
+                  <Route path="/hr/certificates"  component={HrCertificates} />
+                  <Route path="/hr/payments"      component={HrPayments} />
+                  <Route path="/hr/settings"      component={HrSettings} />
                   <Route component={NotFound} />
                 </Switch>
               </HrLayout>
             </ProtectedRoute>
           </Route>
 
+          {/* ── Admin Portal ──────────────────────────── */}
           <Route path="/admin/*">
             <ProtectedRoute allowedRoles={['admin']}>
               <AdminLayout>
                 <Switch>
-                  <Route path="/admin/dashboard" component={AdminDashboard} />
+                  <Route path="/admin/dashboard"     component={AdminDashboard} />
+                  <Route path="/admin/students"      component={AdminStudents} />
+                  <Route path="/admin/offer-letters" component={AdminOfferLetters} />
+                  <Route path="/admin/certificates"  component={AdminCertificates} />
+                  <Route path="/admin/payments"      component={AdminPayments} />
+                  <Route path="/admin/users"         component={AdminUsers} />
+                  <Route path="/admin/settings"      component={AdminSettings} />
                   <Route component={NotFound} />
                 </Switch>
               </AdminLayout>
@@ -57,10 +89,7 @@ function AnimatedRoutes() {
           </Route>
 
           <Route path="/">
-            {() => {
-              window.location.href = "/login";
-              return null;
-            }}
+            {() => { window.location.href = "/login"; return null; }}
           </Route>
 
           <Route component={NotFound} />

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, offerLettersTable, studentsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 
 const router = Router();
 
@@ -8,16 +8,17 @@ router.get("/offer-letters", async (req, res) => {
   try {
     const { status, student_id } = req.query as Record<string, string>;
 
-    const letters = await db.select().from(offerLettersTable);
-    const students = await db.select().from(studentsTable);
-    const studentMap = new Map(students.map((s) => [s.id, s]));
+    const conditions = [];
+    if (status) conditions.push(eq(offerLettersTable.status, status));
+    if (student_id) conditions.push(eq(offerLettersTable.studentId, student_id));
 
-    let result = letters.map((l) => ({ ...l, student: studentMap.get(l.studentId) ?? null }));
+    const rows = await db
+      .select({ letter: offerLettersTable, student: studentsTable })
+      .from(offerLettersTable)
+      .leftJoin(studentsTable, eq(studentsTable.id, offerLettersTable.studentId))
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
 
-    if (status) result = result.filter((l) => l.status === status);
-    if (student_id) result = result.filter((l) => l.studentId === student_id);
-
-    res.json(result);
+    res.json(rows.map(({ letter, student }) => ({ ...letter, student: student ?? null })));
   } catch (err) {
     req.log.error({ err }, "Error listing offer letters");
     res.status(500).json({ error: "Internal server error" });
@@ -26,7 +27,7 @@ router.get("/offer-letters", async (req, res) => {
 
 router.post("/offer-letters", async (req, res): Promise<void> => {
   try {
-    const { student_id } = req.body as { student_id: string; joining_date?: string };
+    const { student_id } = req.body as { student_id: string };
 
     if (!student_id) {
       res.status(400).json({ error: "student_id is required" });
@@ -58,22 +59,18 @@ router.post("/offer-letters", async (req, res): Promise<void> => {
 router.get("/offer-letters/:id", async (req, res): Promise<void> => {
   try {
     const { id } = req.params;
-    const [letter] = await db
-      .select()
+    const [row] = await db
+      .select({ letter: offerLettersTable, student: studentsTable })
       .from(offerLettersTable)
+      .leftJoin(studentsTable, eq(studentsTable.id, offerLettersTable.studentId))
       .where(eq(offerLettersTable.id, id));
 
-    if (!letter) {
+    if (!row) {
       res.status(404).json({ error: "Offer letter not found" });
       return;
     }
 
-    const [student] = await db
-      .select()
-      .from(studentsTable)
-      .where(eq(studentsTable.id, letter.studentId));
-
-    res.json({ ...letter, student: student ?? null });
+    res.json({ ...row.letter, student: row.student ?? null });
   } catch (err) {
     req.log.error({ err }, "Error getting offer letter");
     res.status(500).json({ error: "Internal server error" });
@@ -100,10 +97,7 @@ router.patch("/offer-letters/:id", async (req, res): Promise<void> => {
       return;
     }
 
-    const [student] = await db
-      .select()
-      .from(studentsTable)
-      .where(eq(studentsTable.id, updated.studentId));
+    const [student] = await db.select().from(studentsTable).where(eq(studentsTable.id, updated.studentId));
 
     res.json({ ...updated, student: student ?? null });
   } catch (err) {
