@@ -11,6 +11,17 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+function extractRole(user: User | null): 'admin' | 'hr' | null {
+  if (!user) return null;
+  // Supabase dashboard sets role in app_metadata; signUp sets it in user_metadata
+  const role =
+    user.app_metadata?.role ??
+    user.user_metadata?.role ??
+    null;
+  if (role === 'admin' || role === 'hr') return role;
+  return null;
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<'admin' | 'hr' | null>(null);
@@ -19,7 +30,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
-      setRole((session?.user?.user_metadata?.role as 'admin' | 'hr') ?? null);
+      setRole(extractRole(session?.user ?? null));
       setLoading(false);
     });
 
@@ -27,7 +38,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
-      setRole((session?.user?.user_metadata?.role as 'admin' | 'hr') ?? null);
+      setRole(extractRole(session?.user ?? null));
       setLoading(false);
     });
 
