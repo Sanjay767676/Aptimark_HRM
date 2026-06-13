@@ -1,0 +1,540 @@
+Build and complete my existing HR Management & Internship Operations Platform for Optimax Productions.
+
+IMPORTANT:
+
+This project is already approximately 60% completed.
+
+Do NOT rebuild the application from scratch.
+
+Do NOT replace existing pages, layouts, workflows, components, routing, or Supabase integration unless absolutely necessary.
+
+Analyze the existing codebase and continue development from the current state.
+
+Preserve all existing functionality.
+
+Enhance, optimize, and complete the remaining features while maintaining design consistency across the application.
+
+I will provide the Supabase credentials, database tables, and existing project structure.
+
+The goal is to transform the current project into a production-ready enterprise-grade platform.
+
+====================================================
+PROJECT ARCHITECTURE
+====================================================
+
+Create a monorepo-style structure.
+
+apps/
+
+├── hr-portal/
+│
+├── admin-portal/
+│
+├── shared/
+│
+└── supabase/
+
+The HR Portal and Admin Portal must be completely separated.
+
+Both portals must:
+
+- Have their own layouts
+- Have their own dashboards
+- Have their own routes
+- Have their own features
+- Have their own navigation
+
+Shared code should be stored inside:
+
+shared/
+
+Examples:
+
+- Shared UI Components
+- Shared Types
+- Shared Utilities
+- Shared Hooks
+- Shared Services
+
+The architecture must support future deployment as:
+
+hr.optimaxproductions.com
+
+admin.optimaxproductions.com
+
+while sharing the same Supabase backend.
+
+====================================================
+TECH STACK
+====================================================
+
+Use:
+
+- Next.js 15 App Router
+- TypeScript
+- Tailwind CSS
+- Shadcn UI
+- Framer Motion
+- Supabase
+- React Hook Form
+- Zod
+- Lucide Icons
+
+====================================================
+DESIGN GOALS
+====================================================
+
+Create a premium SaaS experience.
+
+Design inspiration:
+
+- Stripe Dashboard
+- Linear
+- Notion
+- Vercel
+- Zoho People
+- Clerk Dashboard
+
+The UI must feel:
+
+- Premium
+- Corporate
+- Modern
+- Elegant
+- Clean
+- Minimalist
+- Professional
+
+Avoid:
+
+- Cluttered layouts
+- Excessive colors
+- Overly flashy effects
+- Outdated dashboard styles
+
+====================================================
+ANIMATION REQUIREMENTS
+====================================================
+
+Use Framer Motion throughout the application.
+
+Animations must feel smooth, premium, and modern.
+
+Implement:
+
+Page Transitions:
+- Smooth fade transitions
+- Slide transitions
+- Route change animations
+
+Dashboard Cards:
+- Hover elevation effects
+- Subtle scaling
+- Smooth shadows
+
+Sidebar:
+- Smooth expand/collapse
+- Animated active indicators
+
+Tables:
+- Smooth row loading
+- Animated filtering
+- Animated search results
+
+Forms:
+- Smooth validation feedback
+- Animated field states
+- Success transitions
+
+Modals:
+- Smooth open/close
+- Background blur
+- Scale animations
+
+Dropdowns:
+- Smooth transitions
+- Modern motion effects
+
+Loading States:
+- Skeleton loaders
+- Progress indicators
+- Smooth shimmer effects
+
+Notifications:
+- Toast animations
+- Success feedback
+- Error feedback
+
+Important:
+
+Animations must be subtle and professional.
+
+Prioritize smoothness and usability.
+
+The application should feel like a modern enterprise SaaS platform.
+
+====================================================
+AUTHENTICATION
+====================================================
+
+Implement:
+
+- Login
+- Logout
+- Forgot Password UI
+- Session Handling
+- Role Based Access Control
+
+Roles:
+
+1. Admin
+2. HR
+
+After login:
+
+If role = HR
+
+Redirect:
+
+/hr-portal
+
+If role = Admin
+
+Redirect:
+
+/admin-portal
+
+====================================================
+SUPABASE INTEGRATION
+====================================================
+
+Use Supabase as the primary backend.
+
+Prepare:
+
+- Authentication
+- Database
+- Storage
+- Row Level Security
+
+Use environment variables.
+
+Do not hardcode credentials.
+
+====================================================
+DATABASE ENTITIES
+====================================================
+
+Users
+
+- id
+- name
+- email
+- role
+- created_at
+
+Students
+
+- id
+- full_name
+- email
+- phone_number
+- internship_role
+- start_date
+- end_date
+- created_by
+- created_at
+
+Payments
+
+- id
+- student_id
+- total_fee
+- amount_paid
+- balance_amount
+- payment_status
+- updated_at
+
+Offer Letters
+
+- id
+- student_id
+- generated_at
+- file_url
+- status
+
+Certificates
+
+- id
+- student_id
+- generated_at
+- file_url
+- status
+
+====================================================
+HR PORTAL
+====================================================
+
+Create a professional HR Dashboard.
+
+Dashboard Cards:
+
+- Total Applications
+- Offer Letters Generated
+- Certificates Issued
+- Pending Payments
+
+Recent Activities:
+
+- Student Added
+- Offer Letter Generated
+- Certificate Issued
+- Payment Updated
+
+Quick Actions:
+
+- Add Student
+- Generate Offer Letter
+- Generate Certificate
+
+Sidebar:
+
+- Dashboard
+- Students
+- Offer Letters
+- Certificates
+- Payments
+- Settings
+
+====================================================
+STUDENT MANAGEMENT
+====================================================
+
+Student Form:
+
+- Full Name
+- Email
+- Phone Number
+- Internship Role
+- Start Date
+- End Date
+
+Payment Details:
+
+- Total Fee
+- Amount Paid
+
+Automatically Calculate:
+
+- Balance Amount
+
+Payment Status:
+
+- Paid
+- Partial
+- Pending
+
+Features:
+
+- Search
+- Filters
+- Sorting
+- Pagination
+- Status Badges
+
+====================================================
+OFFER LETTER GENERATOR
+====================================================
+
+Workflow:
+
+1. Select Student
+2. Select Internship Role
+3. Select Joining Date
+4. Load Template
+5. Auto Fill Placeholders
+6. Generate PDF
+7. Preview PDF
+8. Download PDF
+
+Supported Placeholders:
+
+{{student_name}}
+
+{{internship_role}}
+
+{{joining_date}}
+
+Status:
+
+- Generated
+- Not Generated
+
+====================================================
+CERTIFICATE GENERATOR
+====================================================
+
+Workflow:
+
+1. Select Student
+2. Internship Role
+3. Duration
+4. Issue Date
+5. Generate Certificate
+6. Preview Certificate
+7. Download PDF
+
+Status:
+
+- Issued
+- Not Issued
+
+====================================================
+PAYMENTS MODULE
+====================================================
+
+HR users should only see:
+
+- Paid
+- Partial
+- Pending
+
+Display modern status badges.
+
+HR users must NOT see:
+
+- Revenue
+- Profit
+- Financial Analytics
+- Company Earnings
+
+====================================================
+ADMIN PORTAL
+====================================================
+
+Create a completely separate Admin Portal.
+
+Admin Dashboard Cards:
+
+- Total Students
+- Total Applications
+- Total Revenue
+- Paid Revenue
+- Pending Revenue
+- Offer Letters Generated
+- Certificates Issued
+
+====================================================
+ADMIN ANALYTICS
+====================================================
+
+Create professional analytics dashboards.
+
+Revenue Analytics:
+
+- Monthly Revenue Chart
+- Revenue Growth Trend
+- Internship Revenue Breakdown
+- Revenue Distribution
+
+Student Analytics:
+
+- Student Growth
+- Active Internships
+- Completion Rate
+
+Payment Analytics:
+
+- Paid Students
+- Partial Payments
+- Pending Payments
+
+====================================================
+ADMIN MODULES
+====================================================
+
+Admin can:
+
+- Manage HR Users
+- View Revenue
+- View Analytics
+- Manage Settings
+- Access All Student Data
+- Access All Payments
+- Access Offer Letters
+- Access Certificates
+
+====================================================
+SETTINGS
+====================================================
+
+Create:
+
+- Profile Settings
+- Theme Settings
+- Notification Settings
+- Change Password
+
+Support:
+
+- Dark Mode
+- Light Mode
+
+====================================================
+PDF GENERATION
+====================================================
+
+Prepare for:
+
+- Offer Letter PDF Generation
+- Certificate PDF Generation
+
+Documents must:
+
+- Support templates
+- Support placeholders
+- Support preview
+- Support download
+
+Store generated files in Supabase Storage.
+
+====================================================
+UI COMPONENTS
+====================================================
+
+Use:
+
+- Modern Cards
+- Data Tables
+- Drawers
+- Dialogs
+- Tooltips
+- Search Bars
+- Command Menus
+- Date Pickers
+- Status Badges
+- Toast Notifications
+- Skeleton Loaders
+
+====================================================
+CODE QUALITY
+====================================================
+
+Create:
+
+- Reusable Components
+- Reusable Hooks
+- Reusable Services
+- Type-Safe Code
+- Clean Folder Structure
+- Scalable Architecture
+
+Follow modern enterprise development standards.
+
+====================================================
+FINAL OBJECTIVE
+====================================================
+
+Transform the existing 60% completed project into a premium, enterprise-grade HR and Internship Management Platform.
+
+The platform should feel like a polished SaaS product with smooth animations, excellent UX, clean architecture, professional dashboards, scalable code, Supabase integration, role-based access control, and production-ready quality.
