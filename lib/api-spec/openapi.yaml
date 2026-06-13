@@ -1,22 +1,33 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Optimax HR & Internship Management Platform API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: students
+    description: Student management
+  - name: payments
+    description: Payment tracking
+  - name: offer-letters
+    description: Offer letter management
+  - name: certificates
+    description: Certificate management
+  - name: users
+    description: User management
+  - name: dashboard
+    description: Dashboard summaries and analytics
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +35,697 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── Students ──────────────────────────────────────────────────────────────
+  /students:
+    get:
+      operationId: listStudents
+      tags: [students]
+      summary: List all students
+      parameters:
+        - name: search
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: role
+          in: query
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer }
+        - name: limit
+          in: query
+          schema: { type: integer }
+      responses:
+        "200":
+          description: List of students
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/StudentList"
+    post:
+      operationId: createStudent
+      tags: [students]
+      summary: Create a new student
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentInput"
+      responses:
+        "201":
+          description: Created student
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+
+  /students/{id}:
+    get:
+      operationId: getStudent
+      tags: [students]
+      summary: Get a student by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Student
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+        "404":
+          description: Not found
+    patch:
+      operationId: updateStudent
+      tags: [students]
+      summary: Update a student
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StudentUpdate"
+      responses:
+        "200":
+          description: Updated student
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Student"
+    delete:
+      operationId: deleteStudent
+      tags: [students]
+      summary: Delete a student
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Payments ──────────────────────────────────────────────────────────────
+  /payments:
+    get:
+      operationId: listPayments
+      tags: [payments]
+      summary: List all payments
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: student_id
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: List of payments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Payment"
+
+  /payments/{id}:
+    get:
+      operationId: getPayment
+      tags: [payments]
+      summary: Get payment by student ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Payment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+    patch:
+      operationId: updatePayment
+      tags: [payments]
+      summary: Update payment details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PaymentUpdate"
+      responses:
+        "200":
+          description: Updated payment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+
+  # ── Offer Letters ─────────────────────────────────────────────────────────
+  /offer-letters:
+    get:
+      operationId: listOfferLetters
+      tags: [offer-letters]
+      summary: List all offer letters
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: student_id
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: List of offer letters
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/OfferLetter"
+    post:
+      operationId: createOfferLetter
+      tags: [offer-letters]
+      summary: Generate an offer letter
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OfferLetterInput"
+      responses:
+        "201":
+          description: Created offer letter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OfferLetter"
+
+  /offer-letters/{id}:
+    get:
+      operationId: getOfferLetter
+      tags: [offer-letters]
+      summary: Get offer letter by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Offer letter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OfferLetter"
+    patch:
+      operationId: updateOfferLetter
+      tags: [offer-letters]
+      summary: Update offer letter status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OfferLetterUpdate"
+      responses:
+        "200":
+          description: Updated offer letter
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OfferLetter"
+
+  # ── Certificates ──────────────────────────────────────────────────────────
+  /certificates:
+    get:
+      operationId: listCertificates
+      tags: [certificates]
+      summary: List all certificates
+      parameters:
+        - name: status
+          in: query
+          schema: { type: string }
+        - name: student_id
+          in: query
+          schema: { type: string }
+      responses:
+        "200":
+          description: List of certificates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Certificate"
+    post:
+      operationId: createCertificate
+      tags: [certificates]
+      summary: Issue a certificate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CertificateInput"
+      responses:
+        "201":
+          description: Created certificate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Certificate"
+
+  /certificates/{id}:
+    get:
+      operationId: getCertificate
+      tags: [certificates]
+      summary: Get certificate by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Certificate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Certificate"
+    patch:
+      operationId: updateCertificate
+      tags: [certificates]
+      summary: Update certificate status
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CertificateUpdate"
+      responses:
+        "200":
+          description: Updated certificate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Certificate"
+
+  # ── Users ─────────────────────────────────────────────────────────────────
+  /users:
+    get:
+      operationId: listUsers
+      tags: [users]
+      summary: List HR users (admin only)
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Create an HR user (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserInput"
+      responses:
+        "201":
+          description: Created user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{id}:
+    patch:
+      operationId: updateUser
+      tags: [users]
+      summary: Update a user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    delete:
+      operationId: deleteUser
+      tags: [users]
+      summary: Delete a user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
+
+  # ── Dashboard / Analytics ─────────────────────────────────────────────────
+  /dashboard/hr-summary:
+    get:
+      operationId: getHrSummary
+      tags: [dashboard]
+      summary: HR dashboard summary cards
+      responses:
+        "200":
+          description: HR summary stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HrSummary"
+
+  /dashboard/admin-summary:
+    get:
+      operationId: getAdminSummary
+      tags: [dashboard]
+      summary: Admin dashboard summary with revenue
+      responses:
+        "200":
+          description: Admin summary stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminSummary"
+
+  /dashboard/recent-activity:
+    get:
+      operationId: getRecentActivity
+      tags: [dashboard]
+      summary: Recent activity feed
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer }
+      responses:
+        "200":
+          description: Recent activity events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityEvent"
+
+  /dashboard/revenue-monthly:
+    get:
+      operationId: getMonthlyRevenue
+      tags: [dashboard]
+      summary: Monthly revenue chart data (admin only)
+      responses:
+        "200":
+          description: Monthly revenue
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/MonthlyRevenue"
+
+  /dashboard/payment-breakdown:
+    get:
+      operationId: getPaymentBreakdown
+      tags: [dashboard]
+      summary: Payment status breakdown
+      responses:
+        "200":
+          description: Payment breakdown counts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PaymentBreakdown"
+
+  /dashboard/student-growth:
+    get:
+      operationId: getStudentGrowth
+      tags: [dashboard]
+      summary: Student registration growth over time
+      responses:
+        "200":
+          description: Student growth
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StudentGrowth"
+
 components:
   schemas:
     HealthStatus:
       type: object
       properties:
-        status:
-          type: string
-      required:
-        - status
+        status: { type: string }
+      required: [status]
 
+    # ── Student ──────────────────────────────────────────────────────────────
+    Student:
+      type: object
+      required: [id, full_name, email, internship_role, start_date, end_date, created_at]
+      properties:
+        id: { type: string }
+        full_name: { type: string }
+        email: { type: string }
+        phone_number: { type: ["string", "null"] }
+        internship_role: { type: string }
+        start_date: { type: string }
+        end_date: { type: string }
+        created_by: { type: ["string", "null"] }
+        created_at: { type: string }
+        payment: { $ref: "#/components/schemas/Payment" }
+
+    StudentInput:
+      type: object
+      required: [full_name, email, internship_role, start_date, end_date]
+      properties:
+        full_name: { type: string }
+        email: { type: string }
+        phone_number: { type: string }
+        internship_role: { type: string }
+        start_date: { type: string }
+        end_date: { type: string }
+        total_fee: { type: number }
+        amount_paid: { type: number }
+
+    StudentUpdate:
+      type: object
+      properties:
+        full_name: { type: string }
+        email: { type: string }
+        phone_number: { type: string }
+        internship_role: { type: string }
+        start_date: { type: string }
+        end_date: { type: string }
+
+    StudentList:
+      type: object
+      required: [data, total, page, limit]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/Student"
+        total: { type: integer }
+        page: { type: integer }
+        limit: { type: integer }
+
+    # ── Payment ──────────────────────────────────────────────────────────────
+    Payment:
+      type: object
+      required: [id, student_id, total_fee, amount_paid, balance_amount, payment_status]
+      properties:
+        id: { type: string }
+        student_id: { type: string }
+        total_fee: { type: number }
+        amount_paid: { type: number }
+        balance_amount: { type: number }
+        payment_status: { type: string, enum: [paid, partial, pending] }
+        updated_at: { type: ["string", "null"] }
+
+    PaymentUpdate:
+      type: object
+      properties:
+        total_fee: { type: number }
+        amount_paid: { type: number }
+
+    # ── Offer Letter ──────────────────────────────────────────────────────────
+    OfferLetter:
+      type: object
+      required: [id, student_id, status, generated_at]
+      properties:
+        id: { type: string }
+        student_id: { type: string }
+        generated_at: { type: string }
+        file_url: { type: ["string", "null"] }
+        status: { type: string, enum: [generated, not_generated] }
+        student: { $ref: "#/components/schemas/Student" }
+
+    OfferLetterInput:
+      type: object
+      required: [student_id]
+      properties:
+        student_id: { type: string }
+        joining_date: { type: string }
+
+    OfferLetterUpdate:
+      type: object
+      properties:
+        status: { type: string }
+        file_url: { type: string }
+
+    # ── Certificate ───────────────────────────────────────────────────────────
+    Certificate:
+      type: object
+      required: [id, student_id, status, generated_at]
+      properties:
+        id: { type: string }
+        student_id: { type: string }
+        generated_at: { type: string }
+        file_url: { type: ["string", "null"] }
+        status: { type: string, enum: [issued, not_issued] }
+        student: { $ref: "#/components/schemas/Student" }
+
+    CertificateInput:
+      type: object
+      required: [student_id]
+      properties:
+        student_id: { type: string }
+        issue_date: { type: string }
+
+    CertificateUpdate:
+      type: object
+      properties:
+        status: { type: string }
+        file_url: { type: string }
+
+    # ── User ──────────────────────────────────────────────────────────────────
+    User:
+      type: object
+      required: [id, name, email, role, created_at]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        email: { type: string }
+        role: { type: string, enum: [admin, hr] }
+        created_at: { type: string }
+
+    UserInput:
+      type: object
+      required: [name, email, role]
+      properties:
+        name: { type: string }
+        email: { type: string }
+        role: { type: string, enum: [admin, hr] }
+        password: { type: string }
+
+    UserUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        email: { type: string }
+        role: { type: string }
+
+    # ── Dashboard / Analytics ─────────────────────────────────────────────────
+    HrSummary:
+      type: object
+      required: [total_students, offer_letters_generated, certificates_issued, pending_payments]
+      properties:
+        total_students: { type: integer }
+        offer_letters_generated: { type: integer }
+        certificates_issued: { type: integer }
+        pending_payments: { type: integer }
+        partial_payments: { type: integer }
+
+    AdminSummary:
+      type: object
+      required: [total_students, total_revenue, paid_revenue, pending_revenue, offer_letters_generated, certificates_issued]
+      properties:
+        total_students: { type: integer }
+        total_applications: { type: integer }
+        total_revenue: { type: number }
+        paid_revenue: { type: number }
+        pending_revenue: { type: number }
+        offer_letters_generated: { type: integer }
+        certificates_issued: { type: integer }
+
+    ActivityEvent:
+      type: object
+      required: [id, type, description, timestamp]
+      properties:
+        id: { type: string }
+        type: { type: string }
+        description: { type: string }
+        timestamp: { type: string }
+        student_name: { type: ["string", "null"] }
+
+    MonthlyRevenue:
+      type: object
+      required: [month, total, paid, pending]
+      properties:
+        month: { type: string }
+        total: { type: number }
+        paid: { type: number }
+        pending: { type: number }
+
+    PaymentBreakdown:
+      type: object
+      required: [paid, partial, pending]
+      properties:
+        paid: { type: integer }
+        partial: { type: integer }
+        pending: { type: integer }
+
+    StudentGrowth:
+      type: object
+      required: [month, count]
+      properties:
+        month: { type: string }
+        count: { type: integer }
