@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import aptimarkLogo from '@assets/aptimarkogo_1781337717887.png';
 
 export function HrSidebar() {
   const [location] = useLocation();
@@ -28,8 +29,10 @@ export function HrSidebar() {
 
   return (
     <div className="flex h-full w-64 flex-col bg-sidebar border-r border-sidebar-border text-sidebar-foreground">
-      <div className="flex h-16 shrink-0 items-center px-6 font-bold text-xl tracking-tight border-b border-sidebar-border">
-        Optimax <span className="text-muted-foreground ml-2 font-normal text-sm">HR</span>
+      <div className="flex h-16 shrink-0 items-center gap-3 px-5 border-b border-sidebar-border">
+        <img src={aptimarkLogo} alt="Aptimark" className="h-8 w-8 object-contain invert" />
+        <span className="font-bold text-lg tracking-tight">Aptimark</span>
+        <span className="text-sidebar-foreground/40 font-normal text-xs ml-auto">HR</span>
       </div>
       <div className="flex flex-1 flex-col overflow-y-auto pt-4 pb-4">
         <nav className="flex-1 space-y-1 px-3">

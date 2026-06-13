@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Spinner } from '@/components/ui/spinner';
-import { Shield } from 'lucide-react';
+import aptimarkLogo from '@assets/aptimarkogo_1781337717887.png';
 
 export default function Login() {
   const [, setLocation] = useLocation();
@@ -51,10 +51,10 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md shadow-lg border-border">
         <CardHeader className="space-y-2 text-center pb-6">
-          <div className="mx-auto bg-primary/10 p-3 rounded-full w-fit mb-2">
-            <Shield className="w-8 h-8 text-primary" />
+          <div className="mx-auto mb-2">
+            <img src={aptimarkLogo} alt="Aptimark" className="h-16 w-16 object-contain" />
           </div>
-          <CardTitle className="text-2xl font-bold tracking-tight">Optimax Portal</CardTitle>
+          <CardTitle className="text-2xl font-bold tracking-tight">Aptimark</CardTitle>
           <CardDescription>Enter your credentials to access the platform</CardDescription>
         </CardHeader>
         <CardContent>
@@ -64,7 +64,7 @@ export default function Login() {
               <Input
                 id="email"
                 type="email"
-                placeholder="name@optimax.com"
+                placeholder="name@aptimark.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
