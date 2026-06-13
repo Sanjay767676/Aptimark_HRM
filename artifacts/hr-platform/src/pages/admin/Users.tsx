@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useListUsers, useCreateUser, useDeleteUser } from '@workspace/api-client-react';
+import { UserInputRole as UserInputRoleValues, useListUsers, useCreateUser, useDeleteUser } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,7 +20,8 @@ export default function AdminUsers() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [role, setRole] = useState('hr');
+  type UserRole = (typeof UserInputRoleValues)[keyof typeof UserInputRoleValues];
+  const [role, setRole] = useState<UserRole>(UserInputRoleValues.hr);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -31,7 +32,7 @@ export default function AdminUsers() {
         toast({ title: 'User created' });
         queryClient.invalidateQueries({ queryKey: ['/api/users'] });
         setOpen(false);
-        setName(''); setEmail(''); setRole('hr');
+        setName(''); setEmail(''); setRole(UserInputRoleValues.hr);
       },
       onError: () => toast({ title: 'Failed to create user', variant: 'destructive' }),
     },
@@ -120,7 +121,7 @@ export default function AdminUsers() {
             </div>
             <div className="space-y-1">
               <Label>Role</Label>
-              <Select value={role} onValueChange={setRole}>
+              <Select value={role} onValueChange={(value) => setRole(value as UserRole)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="hr">HR</SelectItem>
