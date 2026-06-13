@@ -54,7 +54,7 @@ export default function Login() {
           <div className="mx-auto mb-2">
             <img src={aptimarkLogo} alt="Aptimark" className="h-16 w-16 object-contain" />
           </div>
-          <CardTitle className="text-2xl font-bold tracking-tight">Aptimark</CardTitle>
+          <CardTitle className="text-2xl font-bold tracking-tight">Aptimark Solutions<sup className="text-xs font-normal align-super">™</sup></CardTitle>
           <CardDescription>Enter your credentials to access the platform</CardDescription>
         </CardHeader>
         <CardContent>

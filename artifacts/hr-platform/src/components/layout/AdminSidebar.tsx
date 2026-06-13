@@ -33,7 +33,7 @@ export function AdminSidebar() {
     <div className="flex h-full w-64 flex-col bg-sidebar border-r border-sidebar-border text-sidebar-foreground">
       <div className="flex h-16 shrink-0 items-center gap-3 px-5 border-b border-sidebar-border">
         <img src={aptimarkLogo} alt="Aptimark" className="h-8 w-8 object-contain invert" />
-        <span className="font-bold text-lg tracking-tight">Aptimark</span>
+        <span className="font-bold text-lg tracking-tight">Aptimark Solutions<sup className="text-[10px] font-normal align-super">™</sup></span>
         <span className="text-sidebar-foreground/40 font-normal text-xs ml-auto">Admin</span>
       </div>
       <div className="flex flex-1 flex-col overflow-y-auto pt-4 pb-4">
