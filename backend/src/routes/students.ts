@@ -1,6 +1,14 @@
 import { Router } from "express";
-import { db, studentsTable, paymentsTable, insertStudentSchema } from "@workspace/db";
+import { db, studentsTable, paymentsTable, offerLettersTable, certificatesTable } from "@workspace/db";
 import { eq, ilike, or, desc, and, sql } from "drizzle-orm";
+import { logRouteError } from "../lib/log-route-error";
+import {
+  parseStudentInput,
+  parseStudentUpdate,
+  serializePayment,
+  serializeStudent,
+} from "../lib/serialize";
+import { deleteSupabaseFile } from "../lib/supabase-storage";
 
 const router = Router();
 
@@ -43,32 +51,32 @@ router.get("/students", async (req, res) => {
         .where(where),
     ]);
 
-    const data = rows.map(({ student, payment }) => ({ ...student, payment: payment ?? null }));
+    const data = rows.map(({ student, payment }) => ({
+      ...serializeStudent(student),
+      payment: payment ? serializePayment(payment) : null,
+    }));
 
     res.json({ data, total: countRows[0]?.total ?? 0, page: pageNum, limit: limitNum });
   } catch (err) {
-    req.log.error({ err }, "Error listing students");
+    logRouteError(req.log, "Error listing students", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
 router.post("/students", async (req, res): Promise<void> => {
   try {
-    const parsed = insertStudentSchema.safeParse(req.body);
-    if (!parsed.success) {
-      res.status(400).json({ error: "Invalid input", details: parsed.error });
+    const studentData = parseStudentInput(req.body as Record<string, unknown>);
+
+    if (!studentData.fullName || !studentData.internshipRole || !studentData.startDate || !studentData.endDate) {
+      res.status(400).json({ error: "full_name, internship_role, start_date, and end_date are required" });
       return;
     }
 
-    const { totalFee, amountPaid, ...studentData } = req.body as {
+    const { total_fee, amount_paid, totalFee, amountPaid } = req.body as {
+      total_fee?: number;
+      amount_paid?: number;
       totalFee?: number;
       amountPaid?: number;
-      fullName: string;
-      email: string;
-      phoneNumber?: string;
-      internshipRole: string;
-      startDate: string;
-      endDate: string;
     };
 
     const [student] = await db
@@ -83,8 +91,8 @@ router.post("/students", async (req, res): Promise<void> => {
       })
       .returning();
 
-    const fee = totalFee ?? 0;
-    const paid = amountPaid ?? 0;
+    const fee = total_fee ?? totalFee ?? 0;
+    const paid = amount_paid ?? amountPaid ?? 0;
     const balance = fee - paid;
     const paymentStatus = balance <= 0 ? "paid" : paid > 0 ? "partial" : "pending";
 
@@ -99,9 +107,9 @@ router.post("/students", async (req, res): Promise<void> => {
       })
       .returning();
 
-    res.status(201).json({ ...student, payment });
+    res.status(201).json({ ...serializeStudent(student), payment: serializePayment(payment) });
   } catch (err) {
-    req.log.error({ err }, "Error creating student");
+    logRouteError(req.log, "Error creating student", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -120,9 +128,12 @@ router.get("/students/:id", async (req, res): Promise<void> => {
       return;
     }
 
-    res.json({ ...row.student, payment: row.payment ?? null });
+    res.json({
+      ...serializeStudent(row.student),
+      payment: row.payment ? serializePayment(row.payment) : null,
+    });
   } catch (err) {
-    req.log.error({ err }, "Error getting student");
+    logRouteError(req.log, "Error getting student", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -130,15 +141,7 @@ router.get("/students/:id", async (req, res): Promise<void> => {
 router.patch("/students/:id", async (req, res): Promise<void> => {
   try {
     const { id } = req.params;
-    const { fullName, email, phoneNumber, internshipRole, startDate, endDate } = req.body as Record<string, string>;
-
-    const updateData: Partial<typeof studentsTable.$inferInsert> = {};
-    if (fullName !== undefined) updateData.fullName = fullName;
-    if (email !== undefined) updateData.email = email;
-    if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber;
-    if (internshipRole !== undefined) updateData.internshipRole = internshipRole;
-    if (startDate !== undefined) updateData.startDate = startDate;
-    if (endDate !== undefined) updateData.endDate = endDate;
+    const updateData = parseStudentUpdate(req.body as Record<string, unknown>);
 
     const [updated] = await db
       .update(studentsTable)
@@ -156,9 +159,12 @@ router.patch("/students/:id", async (req, res): Promise<void> => {
       .from(paymentsTable)
       .where(eq(paymentsTable.studentId, id));
 
-    res.json({ ...updated, payment: payment ?? null });
+    res.json({
+      ...serializeStudent(updated),
+      payment: payment ? serializePayment(payment) : null,
+    });
   } catch (err) {
-    req.log.error({ err }, "Error updating student");
+    logRouteError(req.log, "Error updating student", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -166,10 +172,23 @@ router.patch("/students/:id", async (req, res): Promise<void> => {
 router.delete("/students/:id", async (req, res) => {
   try {
     const { id } = req.params;
+
+    // Fetch related documents to delete their files
+    const letters = await db.select().from(offerLettersTable).where(eq(offerLettersTable.studentId, id));
+    for (const letter of letters) {
+      await deleteSupabaseFile(letter.fileUrl);
+    }
+
+    const certs = await db.select().from(certificatesTable).where(eq(certificatesTable.studentId, id));
+    for (const cert of certs) {
+      await deleteSupabaseFile(cert.fileUrl);
+    }
+
+    // Now delete the student (this will cascade or we'll assume it does)
     await db.delete(studentsTable).where(eq(studentsTable.id, id));
     res.status(204).send();
   } catch (err) {
-    req.log.error({ err }, "Error deleting student");
+    logRouteError(req.log, "Error deleting student", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });

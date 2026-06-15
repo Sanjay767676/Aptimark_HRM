@@ -1,6 +1,9 @@
 import { Router } from "express";
 import { db, certificatesTable, studentsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
+import { serializeCertificate } from "../lib/serialize";
+import { logRouteError } from "../lib/log-route-error";
+import { deleteSupabaseFile } from "../lib/supabase-storage";
 
 const router = Router();
 
@@ -18,9 +21,9 @@ router.get("/certificates", async (req, res) => {
       .leftJoin(studentsTable, eq(studentsTable.id, certificatesTable.studentId))
       .where(conditions.length > 0 ? and(...conditions) : undefined);
 
-    res.json(rows.map(({ cert, student }) => ({ ...cert, student: student ?? null })));
+    res.json(rows.map(({ cert, student }) => serializeCertificate(cert, student ?? null)));
   } catch (err) {
-    req.log.error({ err }, "Error listing certificates");
+    logRouteError(req.log, "Error listing certificates", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -49,9 +52,9 @@ router.post("/certificates", async (req, res): Promise<void> => {
       .values({ studentId: student_id, status: "issued" })
       .returning();
 
-    res.status(201).json({ ...cert, student });
+    res.status(201).json(serializeCertificate(cert, student));
   } catch (err) {
-    req.log.error({ err }, "Error creating certificate");
+    logRouteError(req.log, "Error creating certificate", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -70,9 +73,9 @@ router.get("/certificates/:id", async (req, res): Promise<void> => {
       return;
     }
 
-    res.json({ ...row.cert, student: row.student ?? null });
+    res.json(serializeCertificate(row.cert, row.student ?? null));
   } catch (err) {
-    req.log.error({ err }, "Error getting certificate");
+    logRouteError(req.log, "Error getting certificate", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -99,9 +102,36 @@ router.patch("/certificates/:id", async (req, res): Promise<void> => {
 
     const [student] = await db.select().from(studentsTable).where(eq(studentsTable.id, updated.studentId));
 
-    res.json({ ...updated, student: student ?? null });
+    res.json(serializeCertificate(updated, student ?? null));
   } catch (err) {
-    req.log.error({ err }, "Error updating certificate");
+    logRouteError(req.log, "Error updating certificate", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.delete("/certificates/:id", async (req, res): Promise<void> => {
+  try {
+    const { id } = req.params;
+    
+    const [existing] = await db
+      .select()
+      .from(certificatesTable)
+      .where(eq(certificatesTable.id, id));
+
+    if (!existing) {
+      res.status(404).json({ error: "Certificate not found" });
+      return;
+    }
+
+    await deleteSupabaseFile(existing.fileUrl);
+
+    await db
+      .delete(certificatesTable)
+      .where(eq(certificatesTable.id, id));
+
+    res.status(204).send();
+  } catch (err) {
+    logRouteError(req.log, "Error deleting certificate", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });

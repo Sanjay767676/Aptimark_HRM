@@ -10,7 +10,21 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
-export const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const connectionString = process.env.DATABASE_URL;
+const isSupabase = connectionString.includes("supabase");
+
+export const pool = new Pool({
+  connectionString,
+  max: 10,
+  idleTimeoutMillis: 30_000,
+  connectionTimeoutMillis: 10_000,
+  ...(isSupabase ? { ssl: { rejectUnauthorized: false } } : {}),
+});
+
+pool.on("error", (err) => {
+  console.error("Unexpected database pool error:", err.message);
+});
+
 export const db = drizzle(pool, { schema });
 
 export * from "./schema";

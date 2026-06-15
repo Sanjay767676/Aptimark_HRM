@@ -3,6 +3,11 @@ import cors from "cors";
 import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app: Express = express();
 
@@ -29,24 +34,38 @@ app.use(
 app.use(
   pinoHttp({
     logger,
+    quietReqLogger: true,
+    customLogLevel: (_req, res, err) => {
+      if (err || res.statusCode >= 500) return "error";
+      if (res.statusCode >= 400) return "warn";
+      return "silent";
+    },
+    customErrorMessage: (req, res, err) => {
+      const detail = err instanceof Error ? err.message : "request failed";
+      return `${req.method} ${req.url?.split("?")[0]} ${res.statusCode} — ${detail}`;
+    },
     serializers: {
       req(req) {
         return {
-          id: req.id,
           method: req.method,
           url: req.url?.split("?")[0],
         };
       },
       res(res) {
-        return {
-          statusCode: res.statusCode,
-        };
+        return { statusCode: res.statusCode };
+      },
+      err(err) {
+        return { type: err.name, message: err.message };
       },
     },
   }),
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Serve static files from public directory for PDFs
+const publicPath = path.join(__dirname, "../public");
+app.use("/public", express.static(publicPath));
 
 app.use("/api", router);
 

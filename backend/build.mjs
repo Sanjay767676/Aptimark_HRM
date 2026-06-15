@@ -19,9 +19,12 @@ async function buildAll() {
     format: "esm",
     outdir: distDir,
     outExtension: { ".js": ".mjs" },
-    logLevel: "info",
+    logLevel: "silent",
     external: [
       "*.node",
+      "pino",
+      "pino-pretty",
+      "thread-stream",
       "sharp",
       "better-sqlite3",
       "sqlite3",

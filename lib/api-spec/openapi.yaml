@@ -279,6 +279,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/OfferLetter"
+    delete:
+      operationId: deleteOfferLetter
+      tags: [offer-letters]
+      summary: Delete an offer letter
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
 
   # ── Certificates ──────────────────────────────────────────────────────────
   /certificates:
@@ -359,6 +371,18 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Certificate"
+    delete:
+      operationId: deleteCertificate
+      tags: [certificates]
+      summary: Delete a certificate
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204":
+          description: Deleted
 
   # ── Users ─────────────────────────────────────────────────────────────────
   /users:
@@ -544,7 +568,7 @@ components:
 
     StudentInput:
       type: object
-      required: [full_name, email, internship_role, start_date, end_date]
+      required: [full_name, internship_role, start_date, end_date]
       properties:
         full_name: { type: string }
         email: { type: string }

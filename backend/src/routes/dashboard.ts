@@ -6,103 +6,93 @@ const router = Router();
 
 router.get("/dashboard/hr-summary", async (req, res) => {
   try {
-    const [{ total_students }] = await db
-      .select({ total_students: sql<number>`count(*)::int` })
-      .from(studentsTable);
+    const result = await db.execute(sql`
+      SELECT
+        (SELECT count(*)::int FROM students) AS total_students,
+        (SELECT count(*)::int FROM offer_letters WHERE status = 'generated') AS offer_letters_generated,
+        (SELECT count(*)::int FROM certificates WHERE status = 'issued') AS certificates_issued,
+        (SELECT count(*)::int FROM payments WHERE payment_status = 'pending') AS pending_payments,
+        (SELECT count(*)::int FROM payments WHERE payment_status = 'partial') AS partial_payments
+    `);
+    const row = result.rows[0];
 
-    const [{ offer_letters_generated }] = await db
-      .select({ offer_letters_generated: sql<number>`count(*)::int` })
-      .from(offerLettersTable)
-      .where(eq(offerLettersTable.status, "generated"));
+    const summary = row as {
+      total_students: number;
+      offer_letters_generated: number;
+      certificates_issued: number;
+      pending_payments: number;
+      partial_payments: number;
+    };
 
-    const [{ certificates_issued }] = await db
-      .select({ certificates_issued: sql<number>`count(*)::int` })
-      .from(certificatesTable)
-      .where(eq(certificatesTable.status, "issued"));
-
-    const [{ pending_payments }] = await db
-      .select({ pending_payments: sql<number>`count(*)::int` })
-      .from(paymentsTable)
-      .where(eq(paymentsTable.paymentStatus, "pending"));
-
-    const [{ partial_payments }] = await db
-      .select({ partial_payments: sql<number>`count(*)::int` })
-      .from(paymentsTable)
-      .where(eq(paymentsTable.paymentStatus, "partial"));
-
-    res.json({
-      total_students,
-      offer_letters_generated,
-      certificates_issued,
-      pending_payments,
-      partial_payments,
-    });
+    res.json(summary);
   } catch (err) {
-    req.log.error({ err }, "Error getting HR summary");
+    const message = err instanceof Error ? err.message : "Unknown error";
+    req.log.error(`HR summary failed: ${message}`);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
 router.get("/dashboard/admin-summary", async (req, res) => {
   try {
-    const [{ total_students }] = await db
-      .select({ total_students: sql<number>`count(*)::int` })
-      .from(studentsTable);
+    const result = await db.execute(sql`
+      SELECT
+        (SELECT count(*)::int FROM students) AS total_students,
+        (SELECT count(*)::int FROM offer_letters WHERE status = 'generated') AS offer_letters_generated,
+        (SELECT count(*)::int FROM certificates WHERE status = 'issued') AS certificates_issued,
+        COALESCE((SELECT SUM(total_fee::numeric) FROM payments), 0) AS total_revenue,
+        COALESCE((SELECT SUM(amount_paid::numeric) FROM payments), 0) AS paid_revenue,
+        COALESCE((SELECT SUM(balance_amount::numeric) FROM payments), 0) AS pending_revenue
+    `);
+    const row = result.rows[0];
 
-    const [{ offer_letters_generated }] = await db
-      .select({ offer_letters_generated: sql<number>`count(*)::int` })
-      .from(offerLettersTable)
-      .where(eq(offerLettersTable.status, "generated"));
-
-    const [{ certificates_issued }] = await db
-      .select({ certificates_issued: sql<number>`count(*)::int` })
-      .from(certificatesTable)
-      .where(eq(certificatesTable.status, "issued"));
-
-    const payments = await db.select().from(paymentsTable);
-
-    const total_revenue = payments.reduce((sum, p) => sum + parseFloat(p.totalFee), 0);
-    const paid_revenue = payments.reduce((sum, p) => sum + parseFloat(p.amountPaid), 0);
-    const pending_revenue = total_revenue - paid_revenue;
+    const summary = row as {
+      total_students: number;
+      offer_letters_generated: number;
+      certificates_issued: number;
+      total_revenue: string;
+      paid_revenue: string;
+      pending_revenue: string;
+    };
 
     res.json({
-      total_students,
-      total_applications: total_students,
-      total_revenue,
-      paid_revenue,
-      pending_revenue,
-      offer_letters_generated,
-      certificates_issued,
+      total_students: summary.total_students,
+      total_applications: summary.total_students,
+      total_revenue: parseFloat(summary.total_revenue),
+      paid_revenue: parseFloat(summary.paid_revenue),
+      pending_revenue: parseFloat(summary.pending_revenue),
+      offer_letters_generated: summary.offer_letters_generated,
+      certificates_issued: summary.certificates_issued,
     });
   } catch (err) {
-    req.log.error({ err }, "Error getting admin summary");
+    const message = err instanceof Error ? err.message : "Unknown error";
+    req.log.error(`Admin summary failed: ${message}`);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
 router.get("/dashboard/recent-activity", async (req, res) => {
   try {
-    const limit = parseInt((req.query.limit as string) ?? "10");
+    const limit = Math.min(parseInt((req.query.limit as string) ?? "10"), 20);
 
-    const recentStudents = await db
-      .select()
-      .from(studentsTable)
-      .orderBy(desc(studentsTable.createdAt))
-      .limit(Math.min(limit, 5));
-
-    const recentOfferLetters = await db
-      .select({ ol: offerLettersTable, student: studentsTable })
-      .from(offerLettersTable)
-      .innerJoin(studentsTable, eq(offerLettersTable.studentId, studentsTable.id))
-      .orderBy(desc(offerLettersTable.generatedAt))
-      .limit(Math.min(limit, 3));
-
-    const recentCertificates = await db
-      .select({ cert: certificatesTable, student: studentsTable })
-      .from(certificatesTable)
-      .innerJoin(studentsTable, eq(certificatesTable.studentId, studentsTable.id))
-      .orderBy(desc(certificatesTable.generatedAt))
-      .limit(Math.min(limit, 3));
+    const [recentStudents, recentOfferLetters, recentCertificates] = await Promise.all([
+      db
+        .select()
+        .from(studentsTable)
+        .orderBy(desc(studentsTable.createdAt))
+        .limit(Math.min(limit, 5)),
+      db
+        .select({ ol: offerLettersTable, student: studentsTable })
+        .from(offerLettersTable)
+        .innerJoin(studentsTable, eq(offerLettersTable.studentId, studentsTable.id))
+        .orderBy(desc(offerLettersTable.generatedAt))
+        .limit(Math.min(limit, 3)),
+      db
+        .select({ cert: certificatesTable, student: studentsTable })
+        .from(certificatesTable)
+        .innerJoin(studentsTable, eq(certificatesTable.studentId, studentsTable.id))
+        .orderBy(desc(certificatesTable.generatedAt))
+        .limit(Math.min(limit, 3)),
+    ]);
 
     const activities = [
       ...recentStudents.map((s) => ({
@@ -132,14 +122,15 @@ router.get("/dashboard/recent-activity", async (req, res) => {
 
     res.json(activities);
   } catch (err) {
-    req.log.error({ err }, "Error getting recent activity");
+    const message = err instanceof Error ? err.message : "Unknown error";
+    req.log.error(`Recent activity failed: ${message}`);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
 router.get("/dashboard/revenue-monthly", async (req, res) => {
   try {
-    const rows = await db.execute(sql`
+    const result = await db.execute(sql`
       SELECT
         TO_CHAR(s.created_at, 'Mon YYYY') AS month,
         TO_CHAR(s.created_at, 'YYYY-MM') AS sort_key,
@@ -153,30 +144,31 @@ router.get("/dashboard/revenue-monthly", async (req, res) => {
       ORDER BY 2
     `);
 
-    res.json(
-      (rows as unknown as { month: string; sort_key: string; total: string; paid: string; pending: string }[]).map((r) => ({
-        month: r.month,
-        total: parseFloat(r.total),
-        paid: parseFloat(r.paid),
-        pending: parseFloat(r.pending),
-      }))
-    );
+    const data = (result.rows as unknown as { month: string; sort_key: string; total: string; paid: string; pending: string }[]).map((r) => ({
+      month: r.month,
+      total: parseFloat(r.total),
+      paid: parseFloat(r.paid),
+      pending: parseFloat(r.pending),
+    }));
+
+    res.json(data);
   } catch (err) {
-    req.log.error({ err }, "Error getting monthly revenue");
+    const message = err instanceof Error ? err.message : "Unknown error";
+    req.log.error(`Monthly revenue failed: ${message}`);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
 router.get("/dashboard/payment-breakdown", async (req, res) => {
   try {
-    const rows = await db.execute(sql`
+    const result = await db.execute(sql`
       SELECT payment_status, count(*)::int AS cnt
       FROM payments
       GROUP BY payment_status
     `);
 
     const breakdown = { paid: 0, partial: 0, pending: 0 };
-    (rows as unknown as { payment_status: string; cnt: number }[]).forEach((r) => {
+    (result.rows as unknown as { payment_status: string; cnt: number }[]).forEach((r) => {
       if (r.payment_status === "paid") breakdown.paid = r.cnt;
       if (r.payment_status === "partial") breakdown.partial = r.cnt;
       if (r.payment_status === "pending") breakdown.pending = r.cnt;
@@ -184,14 +176,15 @@ router.get("/dashboard/payment-breakdown", async (req, res) => {
 
     res.json(breakdown);
   } catch (err) {
-    req.log.error({ err }, "Error getting payment breakdown");
+    const message = err instanceof Error ? err.message : "Unknown error";
+    req.log.error(`Payment breakdown failed: ${message}`);
     res.status(500).json({ error: "Internal server error" });
   }
 });
 
 router.get("/dashboard/student-growth", async (req, res) => {
   try {
-    const rows = await db.execute(sql`
+    const result = await db.execute(sql`
       SELECT
         TO_CHAR(created_at, 'Mon YYYY') AS month,
         TO_CHAR(created_at, 'YYYY-MM') AS sort_key,
@@ -202,14 +195,15 @@ router.get("/dashboard/student-growth", async (req, res) => {
       ORDER BY 2
     `);
 
-    res.json(
-      (rows as unknown as { month: string; sort_key: string; count: number }[]).map((r) => ({
-        month: r.month,
-        count: r.count,
-      }))
-    );
+    const data = (result.rows as unknown as { month: string; sort_key: string; count: number }[]).map((r) => ({
+      month: r.month,
+      count: r.count,
+    }));
+
+    res.json(data);
   } catch (err) {
-    req.log.error({ err }, "Error getting student growth");
+    const message = err instanceof Error ? err.message : "Unknown error";
+    req.log.error(`Student growth failed: ${message}`);
     res.status(500).json({ error: "Internal server error" });
   }
 });

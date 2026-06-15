@@ -1,6 +1,8 @@
 import { Router } from "express";
 import { db, paymentsTable, studentsTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
+import { serializePayment, serializeStudent } from "../lib/serialize";
+import { logRouteError } from "../lib/log-route-error";
 
 const router = Router();
 
@@ -21,13 +23,13 @@ router.get("/payments", async (req, res) => {
     ]);
 
     const payments = (Array.isArray(rows) ? rows : [rows]).map(({ payment, student }) => ({
-      ...payment,
-      student: student ?? null,
+      ...serializePayment(payment),
+      student: student ? serializeStudent(student) : null,
     }));
 
     res.json(payments);
   } catch (err) {
-    req.log.error({ err }, "Error listing payments");
+    logRouteError(req.log, "Error listing payments", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -46,9 +48,12 @@ router.get("/payments/:id", async (req, res): Promise<void> => {
       return;
     }
 
-    res.json({ ...row.payment, student: row.student ?? null });
+    res.json({
+      ...serializePayment(row.payment),
+      student: row.student ? serializeStudent(row.student) : null,
+    });
   } catch (err) {
-    req.log.error({ err }, "Error getting payment");
+    logRouteError(req.log, "Error getting payment", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -79,9 +84,9 @@ router.patch("/payments/:id", async (req, res): Promise<void> => {
       .where(eq(paymentsTable.id, id))
       .returning();
 
-    res.json(updated);
+    res.json(serializePayment(updated));
   } catch (err) {
-    req.log.error({ err }, "Error updating payment");
+    logRouteError(req.log, "Error updating payment", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });
