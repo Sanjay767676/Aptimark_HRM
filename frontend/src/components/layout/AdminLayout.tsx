@@ -7,7 +7,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     <div className="flex h-screen overflow-hidden bg-background">
       <AdminSidebar />
       <main className="flex-1 overflow-y-auto">
-        <div className="py-6 px-8 max-w-7xl mx-auto">
+        <div className="mx-auto max-w-7xl px-5 py-6 md:px-8">
           <PageTransition>{children}</PageTransition>
         </div>
       </main>
