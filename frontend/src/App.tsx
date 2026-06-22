@@ -32,8 +32,6 @@ const HrSettings = lazy(() => import("@/pages/hr/Settings"));
 
 const AdminDashboard = lazy(() => import("@/pages/admin/Dashboard"));
 const AdminStudents = lazy(() => import("@/pages/admin/Students"));
-const AdminOfferLetters = lazy(() => import("@/pages/admin/OfferLetters"));
-const AdminCertificates = lazy(() => import("@/pages/admin/Certificates"));
 const AdminPayments = lazy(() => import("@/pages/admin/Payments"));
 const AdminUsers = lazy(() => import("@/pages/admin/Users"));
 const AdminSettings = lazy(() => import("@/pages/admin/Settings"));
@@ -85,8 +83,6 @@ function AnimatedRoutes() {
         <Route path="/admin/students/new"><AdminPage><HrNewStudent /></AdminPage></Route>
         <Route path="/admin/students/:id"><AdminPage><HrStudentDetail /></AdminPage></Route>
         <Route path="/admin/students"><AdminPage><AdminStudents /></AdminPage></Route>
-        <Route path="/admin/offer-letters"><AdminPage><AdminOfferLetters /></AdminPage></Route>
-        <Route path="/admin/certificates"><AdminPage><AdminCertificates /></AdminPage></Route>
         <Route path="/admin/payments"><AdminPage><AdminPayments /></AdminPage></Route>
         <Route path="/admin/users"><AdminPage><AdminUsers /></AdminPage></Route>
         <Route path="/admin/settings"><AdminPage><AdminSettings /></AdminPage></Route>
