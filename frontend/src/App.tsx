@@ -112,11 +112,7 @@ function App() {
   console.log("App component: Rendering started.");
   return (
     <ErrorBoundary>
-      <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-        {console.log("App: WouterRouter rendered.") || (
-          <AnimatedRoutes />
-        )}
-      </WouterRouter>
+      <AnimatedRoutes />
     </ErrorBoundary>
   );
 }
