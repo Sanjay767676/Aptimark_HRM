@@ -10,11 +10,10 @@ WORKDIR /app
 
 # Copy package files and install all dependencies (including dev for build)
 COPY package*.json ./
-COPY . .
+COPY tsconfig.json ./
+COPY backend ./backend
+COPY lib ./lib
 RUN npm ci
-
-# Build the frontend (assumes workspace @workspace/hr-platform)
-RUN npm run build -w @workspace/hr-platform
 # Build the backend (TS compile)
 RUN npm run build -w @workspace/backend
 
@@ -25,6 +24,7 @@ FROM node:22-alpine
 RUN apk add --no-cache chromium
 
 WORKDIR /app
+ENV NODE_ENV=production
 
 # Copy built files from builder stage
 COPY --from=builder /app /app
