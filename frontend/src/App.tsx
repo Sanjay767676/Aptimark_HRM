@@ -12,11 +12,14 @@ import NotFound from "@/pages/not-found";
 
 const Login = lazy(() => import("@/pages/Login"));
 
-const PageLoader = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
-    <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-  </div>
-);
+const PageLoader = () => {
+  console.log("PageLoader: Rendering fallback spinner.");
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+    </div>
+  );
+};
 
 // Layouts
 const HrLayout    = lazy(() => import("@/components/layout/HrLayout"));
@@ -52,6 +55,7 @@ const queryClient = new QueryClient({
 
 function AnimatedRoutes() {
   const [location] = useLocation();
+  console.log("AnimatedRoutes: Rendering started. Current path:", location);
 
   return (
     <AnimatePresence mode="wait">

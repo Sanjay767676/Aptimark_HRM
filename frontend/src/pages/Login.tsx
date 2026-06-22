@@ -1,3 +1,5 @@
+console.log("Login.tsx: Script evaluation started.");
+
 import { useState } from 'react';
 import { useLocation } from 'wouter';
 import { supabase } from '@/lib/supabase';
@@ -11,6 +13,7 @@ import { Spinner } from '@/components/ui/spinner';
 import { motion } from 'framer-motion';
 
 export default function Login() {
+  console.log("Login component: Rendering started.");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
