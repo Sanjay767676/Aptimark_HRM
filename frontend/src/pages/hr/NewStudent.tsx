@@ -52,8 +52,13 @@ export default function NewStudent() {
   });
 
   const onSubmit = (data: StudentFormValues) => {
+    const payload = {
+      ...data,
+      email: data.email ?? '',
+    };
+
     createStudent.mutate(
-      { data },
+      { data: payload },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getListStudentsQueryKey() });
