@@ -14,4 +14,11 @@ if (!hasSupabaseConfig) {
 export const supabase = createClient(
   supabaseUrl || fallbackSupabaseUrl,
   supabaseAnonKey || fallbackSupabaseAnonKey,
+  {
+    auth: {
+      storage: window.sessionStorage,
+      autoRefreshToken: true,
+      persistSession: true,
+    },
+  }
 );

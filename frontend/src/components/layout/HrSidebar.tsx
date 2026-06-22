@@ -23,7 +23,6 @@ export function HrSidebar() {
     { name: 'Students', href: '/hr/students', icon: Users },
     { name: 'Offer Letters', href: '/hr/offer-letters', icon: FileText },
     { name: 'Certificates', href: '/hr/certificates', icon: Award },
-    { name: 'Payments', href: '/hr/payments', icon: CreditCard },
     { name: 'Settings', href: '/hr/settings', icon: Settings },
   ];
 

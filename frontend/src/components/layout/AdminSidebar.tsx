@@ -21,7 +21,6 @@ export function AdminSidebar() {
 
   const navigation = [
     { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-    { name: 'Students', href: '/admin/students', icon: Users },
     { name: 'Payments', href: '/admin/payments', icon: CreditCard },
     { name: 'Users', href: '/admin/users', icon: ShieldAlert },
     { name: 'Settings', href: '/admin/settings', icon: Settings },

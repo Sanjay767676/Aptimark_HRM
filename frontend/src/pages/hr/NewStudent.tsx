@@ -34,9 +34,9 @@ type StudentFormValues = z.infer<typeof studentSchema>;
 type ImportedStudent = StudentFormValues & { rowNumber: number };
 
 const columnAliases = {
-  full_name: ['fullname', 'name', 'studentname', 'student', 'candidatename', 'internname'],
-  email: ['email', 'emailaddress', 'mail'],
-  internship_role: ['internshiprole', 'role', 'domain', 'internshipdomain', 'position', 'course'],
+  full_name: ['fullname', 'name', 'studentname', 'student', 'candidatename', 'internname', 'Name'],
+  email: ['email', 'emailaddress', 'mail', 'Email ID'],
+  internship_role: ['internshiprole', 'role', 'domain', 'internshipdomain', 'position', 'course', 'CHOOSE YOUR PREFERRED DOMAIN'],
   start_date: ['startdate', 'fromdate', 'joiningdate', 'dateofjoining'],
   end_date: ['enddate', 'todate', 'completiondate', 'lastdate'],
   total_fee: ['totalfee', 'fee', 'fees', 'coursefee', 'internshipfee'],
@@ -361,7 +361,7 @@ export default function NewStudent() {
                   )}
                 />
 
-                 <FormField
+                <FormField
                   control={form.control}
                   name="start_date"
                   render={({ field }) => (
