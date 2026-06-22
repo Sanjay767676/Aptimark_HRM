@@ -1,7 +1,7 @@
 {
   "rewrites": [
     {
-      "source": "/((?!api|assets|public|favicon.png|aptimark-logo.png).*)",
+      "source": "/:path*",
       "destination": "/index.html"
     }
   ]
