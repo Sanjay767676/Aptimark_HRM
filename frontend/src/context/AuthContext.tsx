@@ -27,12 +27,15 @@ function extractRole(user: User | null): 'admin' | 'hr' | null {
 }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  console.log("AuthProvider: Initializing.");
   const [user, setUser] = useState<User | null>(null);
   const [role, setRole] = useState<'admin' | 'hr' | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("AuthProvider useEffect: Fetching session.");
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("AuthProvider useEffect: Session fetched.", { user: session?.user?.email, role: extractRole(session?.user ?? null) });
       setUser(session?.user ?? null);
       setRole(extractRole(session?.user ?? null));
       setLoading(false);
@@ -41,6 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("AuthProvider onAuthStateChange:", _event, { user: session?.user?.email, role: extractRole(session?.user ?? null) });
       setUser(session?.user ?? null);
       setRole(extractRole(session?.user ?? null));
       setLoading(false);

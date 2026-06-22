@@ -108,6 +108,7 @@ function AnimatedRoutes() {
 }
 
 function App() {
+  console.log("App component: Rendering started.");
   return (
     <ErrorBoundary>
       <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
