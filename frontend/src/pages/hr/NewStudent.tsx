@@ -55,7 +55,7 @@ function buildNormalizedRow(row: Record<string, unknown>) {
 
 function pickValue(row: Record<string, unknown>, aliases: readonly string[]) {
   for (const alias of aliases) {
-    const value = row[alias];
+    const value = row[normalizeColumnName(alias)];
     if (value !== undefined && value !== null && String(value).trim() !== '') {
       return value;
     }
