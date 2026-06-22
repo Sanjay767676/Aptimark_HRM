@@ -110,9 +110,20 @@ function AnimatedRoutes() {
 function App() {
   console.log("App component: Rendering started.");
   return (
-    <div style={{ padding: 40, color: 'blue', fontSize: 32, fontWeight: 'bold', textAlign: 'center' }}>
-      Vite React App is Mounting and Rendering Successfully!
-    </div>
+    <ErrorBoundary>
+      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+        <QueryClientProvider client={queryClient}>
+          <AuthProvider>
+            <TooltipProvider>
+              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+                <AnimatedRoutes />
+              </WouterRouter>
+              <Toaster />
+            </TooltipProvider>
+          </AuthProvider>
+        </QueryClientProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
   );
 }
 
