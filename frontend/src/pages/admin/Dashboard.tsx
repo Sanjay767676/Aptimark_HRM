@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Users, FileText, Award, IndianRupee, Wallet, PiggyBank } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
-import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid, Line, LineChart, PieChart, Pie, Cell } from 'recharts';
+import { Bar, BarChart, XAxis, YAxis, CartesianGrid, Line, LineChart, PieChart, Pie, Cell } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent, ChartLegend, ChartLegendContent, type ChartConfig } from '@/components/ui/chart';
 
 export default function AdminDashboard() {
   const { data: summary, isLoading: isLoadingSummary } = useGetAdminSummary();
@@ -68,6 +69,39 @@ export default function AdminDashboard() {
     { name: 'Pending', value: paymentBreakdown?.pending ?? 0, color: '#ef4444' },
   ];
 
+  const revenueChartConfig = {
+    paid: {
+      label: "Paid",
+      color: "#10b981",
+    },
+    pending: {
+      label: "Pending",
+      color: "#ef4444",
+    },
+  } satisfies ChartConfig;
+
+  const paymentStatusConfig = {
+    paid: {
+      label: "Paid",
+      color: "#10b981",
+    },
+    partial: {
+      label: "Partial",
+      color: "#f59e0b",
+    },
+    pending: {
+      label: "Pending",
+      color: "#ef4444",
+    },
+  } satisfies ChartConfig;
+
+  const growthChartConfig = {
+    count: {
+      label: "New Students",
+      color: "hsl(var(--primary))",
+    },
+  } satisfies ChartConfig;
+
   return (
     <div className="space-y-6">
       <div>
@@ -115,21 +149,17 @@ export default function AdminDashboard() {
               <Skeleton className="h-[300px] w-full" />
             ) : (
               <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={monthlyRevenue ?? []} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                    <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => formatCurrency(Number(value))} />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))' }}
-                      itemStyle={{ color: 'hsl(var(--foreground))' }}
-                      formatter={(value) => formatCurrency(Number(value))}
-                    />
-                    <Legend />
-                    <Bar dataKey="paid" name="Paid" fill="#10b981" radius={[4, 4, 0, 0]} stackId="a" />
-                    <Bar dataKey="pending" name="Pending" fill="#ef4444" radius={[4, 4, 0, 0]} stackId="a" />
+                <ChartContainer config={revenueChartConfig} className="h-full w-full">
+                  <BarChart data={monthlyRevenue ?? []} margin={{ top: 20, right: 10, left: 10, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+                    <YAxis tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => formatCurrency(Number(value))} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <ChartLegend content={<ChartLegendContent />} />
+                    <Bar dataKey="paid" name="Paid" fill="var(--color-paid)" radius={[4, 4, 0, 0]} stackId="a" isAnimationActive={true} animationDuration={1000} />
+                    <Bar dataKey="pending" name="Pending" fill="var(--color-pending)" radius={[4, 4, 0, 0]} stackId="a" isAnimationActive={true} animationDuration={1000} />
                   </BarChart>
-                </ResponsiveContainer>
+                </ChartContainer>
               </div>
             )}
           </CardContent>
@@ -145,7 +175,7 @@ export default function AdminDashboard() {
               <Skeleton className="h-[300px] w-full" />
             ) : (
               <div className="h-[300px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
+                <ChartContainer config={paymentStatusConfig} className="h-full w-full">
                   <PieChart>
                     <Pie
                       data={pieData}
@@ -155,15 +185,17 @@ export default function AdminDashboard() {
                       outerRadius={80}
                       paddingAngle={5}
                       dataKey="value"
+                      isAnimationActive={true}
+                      animationDuration={1000}
                     >
                       {pieData.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))' }} />
-                    <Legend />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <ChartLegend content={<ChartLegendContent />} />
                   </PieChart>
-                </ResponsiveContainer>
+                </ChartContainer>
               </div>
             )}
           </CardContent>
@@ -181,15 +213,15 @@ export default function AdminDashboard() {
               <Skeleton className="h-[300px] w-full" />
             ) : (
               <div className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={studentGrowth ?? []} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-                    <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                    <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))' }} />
-                    <Line type="monotone" dataKey="count" name="New Students" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                <ChartContainer config={growthChartConfig} className="h-full w-full">
+                  <LineChart data={studentGrowth ?? []} margin={{ top: 20, right: 20, left: 10, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                    <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+                    <YAxis tickLine={false} axisLine={false} tickMargin={8} />
+                    <ChartTooltip content={<ChartTooltipContent />} />
+                    <Line type="monotone" dataKey="count" name="New Students" stroke="var(--color-count)" strokeWidth={2} dot={{ r: 4 }} activeDot={{ r: 6 }} isAnimationActive={true} animationDuration={1000} />
                   </LineChart>
-                </ResponsiveContainer>
+                </ChartContainer>
               </div>
             )}
           </CardContent>

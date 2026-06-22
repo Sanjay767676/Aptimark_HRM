@@ -13,6 +13,7 @@ export const offerLettersTable = pgTable("offer_letters", {
   status: text("status").notNull().default("not_generated"),
   referenceNumber: text("reference_number"),
   sequenceNumber: integer("sequence_number"),
+  emailStatus: text("email_status"),
 });
 
 export const insertOfferLetterSchema = createInsertSchema(offerLettersTable).omit({

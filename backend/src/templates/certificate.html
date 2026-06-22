@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Certificate of Completion</title>
+  <style>
+    body {
+      font-family: Georgia, serif;
+      text-align: center;
+      padding: 60px 40px;
+      color: #1a1a1a;
+      background-color: #ffffff;
+      margin: 0;
+    }
+    .border {
+      border: 8px double #c8a96e;
+      padding: 40px;
+      max-width: 700px;
+      margin: 0 auto;
+      box-sizing: border-box;
+    }
+    h2 {
+      font-size: 14px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #888;
+      margin-bottom: 12px;
+    }
+    h1 {
+      font-size: 38px;
+      margin: 0 0 32px;
+      color: #1a1a1a;
+    }
+    .name {
+      font-size: 30px;
+      font-style: italic;
+      color: #c8a96e;
+      margin: 20px 0;
+      border-bottom: 1px solid #ddd;
+      padding-bottom: 12px;
+      font-weight: bold;
+    }
+    p {
+      font-size: 16px;
+      line-height: 1.8;
+      color: #444;
+    }
+    .sign {
+      margin-top: 50px;
+      display: flex;
+      justify-content: space-around;
+    }
+    .sign div {
+      border-top: 1px solid #aaa;
+      padding-top: 8px;
+      min-width: 160px;
+      font-size: 13px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="border">
+    <h2>Aptimark Solutions™</h2>
+    <h1>Certificate of Completion</h1>
+    <p>This is to certify that</p>
+    <div class="name">{{candidate_name}}</div>
+    <p>has successfully completed the internship program as a<br/>
+    <strong>{{internship_domain}}</strong><br/>
+    from <strong>{{from_date}}</strong> to <strong>{{to_date}}</strong>.</p>
+    <p style="margin-top:20px">Issue Date: <strong>{{issue_date}}</strong></p>
+    <div class="sign">
+      <div>HR Department<br/>Aptimark Solutions™</div>
+      <div>Date: {{issue_date}}</div>
+    </div>
+  </div>
+</body>
+</html>

@@ -4,6 +4,11 @@ import { eq, and } from "drizzle-orm";
 import { serializeCertificate } from "../lib/serialize";
 import { logRouteError } from "../lib/log-route-error";
 import { deleteSupabaseFile } from "../lib/supabase-storage";
+import { pdfGenerator } from "../services/pdf-generator";
+import { emailQueue } from "../services/email-queue";
+import path from "path";
+import fs from "fs/promises";
+import crypto from "crypto";
 
 const router = Router();
 
@@ -47,10 +52,72 @@ router.post("/certificates", async (req, res): Promise<void> => {
       return;
     }
 
-    const [cert] = await db
-      .insert(certificatesTable)
-      .values({ studentId: student_id, status: "issued" })
-      .returning();
+    const pdfData = {
+      candidate_name: student.fullName,
+      internship_domain: student.internshipRole,
+      from_date: new Date(student.startDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      to_date: new Date(student.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      issue_date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+    };
+
+    const pdfBuffer = await pdfGenerator.generateCertificate(pdfData);
+    const safeName = student.fullName.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+    const filename = `${safeName}_certificate.pdf`;
+
+    let fileUrl = "";
+    const supabaseUrl = process.env.VITE_SUPABASE_URL;
+    const supabaseKey = process.env.VITE_SUPABASE_ANON_KEY;
+    let uploadedToSupabase = false;
+
+    if (supabaseUrl && supabaseKey) {
+      try {
+        const uploadRes = await fetch(`${supabaseUrl}/storage/v1/object/pdfs/${filename}`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${supabaseKey}`,
+            "apikey": supabaseKey,
+            "Content-Type": "application/pdf",
+            "x-upsert": "true",
+          },
+          body: pdfBuffer
+        });
+        if (uploadRes.ok) {
+          fileUrl = `${supabaseUrl}/storage/v1/object/public/pdfs/${filename}`;
+          uploadedToSupabase = true;
+        } else {
+          const errText = await uploadRes.text();
+          req.log.warn(`Supabase certificate upload failed, falling back to local: ${uploadRes.status} ${errText}`);
+        }
+      } catch (uploadErr) {
+        req.log.warn(`Supabase fetch error for certificate, falling back to local: ${uploadErr}`);
+      }
+    }
+
+    if (!uploadedToSupabase) {
+      const publicDir = path.resolve(process.cwd(), "public/pdfs");
+      await fs.mkdir(publicDir, { recursive: true });
+      const filePath = path.join(publicDir, filename);
+      await fs.writeFile(filePath, pdfBuffer);
+      fileUrl = `/api/public/pdfs/${filename}`;
+    }
+
+    // Check if certificate already exists to avoid duplicate constraint errors
+    const [existingCert] = await db
+      .select()
+      .from(certificatesTable)
+      .where(eq(certificatesTable.studentId, student_id))
+      .limit(1);
+
+    const [cert] = existingCert
+      ? await db
+          .update(certificatesTable)
+          .set({ status: "issued", fileUrl })
+          .where(eq(certificatesTable.id, existingCert.id))
+          .returning()
+      : await db
+          .insert(certificatesTable)
+          .values({ studentId: student_id, status: "issued", fileUrl })
+          .returning();
 
     res.status(201).json(serializeCertificate(cert, student));
   } catch (err) {
@@ -132,6 +199,36 @@ router.delete("/certificates/:id", async (req, res): Promise<void> => {
     res.status(204).send();
   } catch (err) {
     logRouteError(req.log, "Error deleting certificate", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.post("/certificates/send-email", async (req, res): Promise<void> => {
+  try {
+    const { ids, sender_email, message } = req.body as {
+      ids: string[];
+      sender_email: string;
+      message: string;
+    };
+
+    if (!ids || !ids.length || !sender_email || !message) {
+      res.status(400).json({ error: "ids, sender_email, and message are required" });
+      return;
+    }
+
+    for (const recordId of ids) {
+      await emailQueue.addJob({
+        id: crypto.randomUUID(),
+        type: "certificate",
+        recordId,
+        senderEmail: sender_email,
+        congratsMessage: message,
+      });
+    }
+
+    res.json({ message: "Emails queued successfully" });
+  } catch (err) {
+    logRouteError(req.log, "Error sending certificate email", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });

@@ -4,15 +4,18 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Award, Plus, Printer, Trash2 } from 'lucide-react';
+import { Award, Plus, Printer, Trash2, Mail } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { apiRequest } from '@/lib/api';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 function printCertificate(cert: any) {
   const student = cert.student;
@@ -60,6 +63,12 @@ export default function Certificates() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  const [selectedMailIds, setSelectedMailIds] = useState<string[]>([]);
+  const [mailOpen, setMailOpen] = useState(false);
+  const [senderEmail, setSenderEmail] = useState('contact@aptimarksolutions.in');
+  const [congratsMsg, setCongratsMsg] = useState('Dear {name},\n\nCongratulations! We are pleased to award you the certificate of completion for your internship. Please find it attached.\n\nWarm regards,\nHR Department');
+  const [isSendingMail, setIsSendingMail] = useState(false);
+
   const { data: certs, isLoading } = useListCertificates({});
   const { data: students } = useListStudents({ limit: 100 });
   const createMutation = useCreateCertificate({
@@ -91,6 +100,71 @@ export default function Certificates() {
     }
   };
 
+  const handleOpenSendMail = () => {
+    const missingEmails = selectedMailIds.map(id => {
+      const cert = certs?.find((c: any) => c.id === id);
+      return cert?.student;
+    }).filter(student => !student?.email);
+
+    if (missingEmails.length > 0) {
+      alert(`The following student(s) do not have a registered email: ${missingEmails.map(s => s.full_name).join(', ')}. Please add their email ID first.`);
+      return;
+    }
+
+    setMailOpen(true);
+  };
+
+  const handleSendMail = async () => {
+    setIsSendingMail(true);
+    try {
+      await apiRequest('/api/certificates/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ids: selectedMailIds,
+          sender_email: senderEmail,
+          message: congratsMsg
+        })
+      });
+      toast({ title: 'Emails queued successfully' });
+      setSelectedMailIds([]);
+      setMailOpen(false);
+      queryClient.invalidateQueries({ queryKey: getListCertificatesQueryKey({}) });
+    } catch (err: any) {
+      toast({ title: 'Failed to queue emails', variant: 'destructive' });
+    } finally {
+      setIsSendingMail(false);
+    }
+  };
+
+  const getEmailStatusDot = (status: string) => {
+    if (status === 'success') {
+      return (
+        <div className="flex items-center gap-1.5 text-xs text-emerald-600 font-medium">
+          <span className="h-2 w-2 rounded-full bg-emerald-500 ring-2 ring-emerald-500/20" />
+          Success
+        </div>
+      );
+    }
+    if (status === 'failed') {
+      return (
+        <div className="flex items-center gap-1.5 text-xs text-rose-600 font-medium">
+          <span className="h-2 w-2 rounded-full bg-rose-500 ring-2 ring-rose-500/20" />
+          Failed
+        </div>
+      );
+    }
+    if (status === 'pending') {
+      return (
+        <div className="flex items-center gap-1.5 text-xs text-amber-600 font-medium">
+          <span className="h-2 w-2 rounded-full bg-amber-500 ring-2 ring-amber-500/20 animate-pulse" />
+          Pending
+        </div>
+      );
+    }
+    return <span className="text-xs text-muted-foreground">—</span>;
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -98,9 +172,16 @@ export default function Certificates() {
           <h1 className="text-2xl font-bold tracking-tight">Certificates</h1>
           <p className="text-muted-foreground">Issue and print internship completion certificates.</p>
         </div>
-        <Button onClick={() => setOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Issue Certificate
-        </Button>
+        <div className="flex gap-2">
+          {selectedMailIds.length > 0 && (
+            <Button variant="outline" className="border-primary text-primary hover:bg-primary/5" onClick={handleOpenSendMail}>
+              <Mail className="mr-2 h-4 w-4" /> Send Mail ({selectedMailIds.length})
+            </Button>
+          )}
+          <Button onClick={() => setOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" /> Issue Certificate
+          </Button>
+        </div>
       </div>
 
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
@@ -108,9 +189,24 @@ export default function Certificates() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[50px]">
+                  <input
+                    type="checkbox"
+                    className="rounded border-gray-300 accent-primary w-4 h-4 cursor-pointer"
+                    checked={certs?.length > 0 && selectedMailIds.length === certs.length}
+                    onChange={(e) => {
+                      if (e.target.checked) {
+                        setSelectedMailIds(certs.map((c: any) => c.id));
+                      } else {
+                        setSelectedMailIds([]);
+                      }
+                    }}
+                  />
+                </TableHead>
                 <TableHead>Student</TableHead>
                 <TableHead>Internship Role</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead>Mail Status</TableHead>
                 <TableHead>Issued On</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -119,12 +215,12 @@ export default function Certificates() {
               {isLoading ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <TableRow key={i}>
-                    {Array.from({ length: 5 }).map((_, j) => <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>)}
+                    {Array.from({ length: 7 }).map((_, j) => <TableCell key={j}><Skeleton className="h-4 w-full" /></TableCell>)}
                   </TableRow>
                 ))
               ) : !certs?.length ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                  <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
                     <Award className="mx-auto h-8 w-8 mb-2 opacity-30" />
                     No certificates issued yet.
                   </TableCell>
@@ -132,14 +228,32 @@ export default function Certificates() {
               ) : (
                 certs.map((cert: any) => (
                   <TableRow key={cert.id}>
+                    <TableCell>
+                      <input
+                        type="checkbox"
+                        className="rounded border-gray-300 accent-primary w-4 h-4 cursor-pointer"
+                        checked={selectedMailIds.includes(cert.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedMailIds([...selectedMailIds, cert.id]);
+                          } else {
+                            setSelectedMailIds(selectedMailIds.filter((id) => id !== cert.id));
+                          }
+                        }}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium">
                       <div>{cert.student?.full_name ?? '—'}</div>
+                      <div className="text-xs text-muted-foreground">{cert.student?.email}</div>
                     </TableCell>
                     <TableCell>{cert.student?.internship_role ?? '—'}</TableCell>
                     <TableCell>
                       <Badge className="bg-purple-500/10 text-purple-600 border-purple-500/20 capitalize" variant="outline">
                         {cert.status}
                       </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {getEmailStatusDot(cert.email_status)}
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {cert.created_at ? format(new Date(cert.created_at), 'MMM d, yyyy') : '—'}
@@ -186,6 +300,48 @@ export default function Certificates() {
               disabled={!selectedStudent || createMutation.isPending}
             >
               {createMutation.isPending ? 'Issuing…' : 'Issue'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={mailOpen} onOpenChange={setMailOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Send Congrats Email</DialogTitle>
+            <DialogDescription>
+              Queue congrats emails to the selected {selectedMailIds.length} student(s) with their certificates attached.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-1">
+              <Label htmlFor="senderEmail">Sender Email Address</Label>
+              <Input
+                id="senderEmail"
+                type="email"
+                placeholder="sender@example.com"
+                value={senderEmail}
+                onChange={(e) => setSenderEmail(e.target.value)}
+              />
+            </div>
+            <div className="space-y-1">
+              <Label htmlFor="congratsMessage">Congrats Message</Label>
+              <Textarea
+                id="congratsMessage"
+                rows={6}
+                value={congratsMsg}
+                onChange={(e) => setCongratsMsg(e.target.value)}
+                placeholder="Write your congratulations message here..."
+              />
+              <p className="text-xs text-muted-foreground">
+                You can use <strong>{`{name}`}</strong> as a placeholder for the student's full name.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMailOpen(false)} disabled={isSendingMail}>Cancel</Button>
+            <Button onClick={handleSendMail} disabled={isSendingMail || !senderEmail || !congratsMsg}>
+              {isSendingMail ? 'Queueing...' : 'Send Mail'}
             </Button>
           </DialogFooter>
         </DialogContent>

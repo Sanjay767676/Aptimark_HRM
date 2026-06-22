@@ -5,6 +5,7 @@ import { serializeOfferLetter } from "../lib/serialize";
 import { logRouteError } from "../lib/log-route-error";
 import { deleteSupabaseFile } from "../lib/supabase-storage";
 import { pdfGenerator } from "../services/pdf-generator";
+import { emailQueue } from "../services/email-queue";
 import path from "path";
 import fs from "fs/promises";
 import crypto from "crypto";
@@ -247,6 +248,56 @@ router.patch("/offer-letters/:id", async (req, res): Promise<void> => {
   }
 });
 
+router.get("/offer-letters/:id", async (req, res): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const [row] = await db
+      .select({ letter: offerLettersTable, student: studentsTable })
+      .from(offerLettersTable)
+      .leftJoin(studentsTable, eq(studentsTable.id, offerLettersTable.studentId))
+      .where(eq(offerLettersTable.id, id));
+
+    if (!row) {
+      res.status(404).json({ error: "Offer letter not found" });
+      return;
+    }
+
+    res.json(serializeOfferLetter(row.letter, row.student ?? null));
+  } catch (err) {
+    logRouteError(req.log, "Error getting offer letter", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.patch("/offer-letters/:id", async (req, res): Promise<void> => {
+  try {
+    const { id } = req.params;
+    const { status, file_url } = req.body as { status?: string; file_url?: string };
+
+    const update: Partial<typeof offerLettersTable.$inferInsert> = {};
+    if (status !== undefined) update.status = status;
+    if (file_url !== undefined) update.fileUrl = file_url;
+
+    const [updated] = await db
+      .update(offerLettersTable)
+      .set(update)
+      .where(eq(offerLettersTable.id, id))
+      .returning();
+
+    if (!updated) {
+      res.status(404).json({ error: "Offer letter not found" });
+      return;
+    }
+
+    const [student] = await db.select().from(studentsTable).where(eq(studentsTable.id, updated.studentId));
+
+    res.json(serializeOfferLetter(updated, student ?? null));
+  } catch (err) {
+    logRouteError(req.log, "Error updating offer letter", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.delete("/offer-letters/:id", async (req, res): Promise<void> => {
   try {
     const { id } = req.params;
@@ -273,6 +324,36 @@ router.delete("/offer-letters/:id", async (req, res): Promise<void> => {
     res.status(204).send();
   } catch (err) {
     logRouteError(req.log, "Error deleting offer letter", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.post("/offer-letters/send-email", async (req, res): Promise<void> => {
+  try {
+    const { ids, sender_email, message } = req.body as {
+      ids: string[];
+      sender_email: string;
+      message: string;
+    };
+
+    if (!ids || !ids.length || !sender_email || !message) {
+      res.status(400).json({ error: "ids, sender_email, and message are required" });
+      return;
+    }
+
+    for (const recordId of ids) {
+      await emailQueue.addJob({
+        id: crypto.randomUUID(),
+        type: "offer-letter",
+        recordId,
+        senderEmail: sender_email,
+        congratsMessage: message,
+      });
+    }
+
+    res.json({ message: "Emails queued successfully" });
+  } catch (err) {
+    logRouteError(req.log, "Error sending offer letter email", err);
     res.status(500).json({ error: "Internal server error" });
   }
 });

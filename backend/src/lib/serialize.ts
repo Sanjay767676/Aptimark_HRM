@@ -74,6 +74,7 @@ export function serializeOfferLetter(letter: OfferLetterRow, student: StudentRow
     created_at: toIso(letter.generatedAt),
     file_url: letter.fileUrl,
     status: letter.status,
+    email_status: (letter as any).emailStatus ?? null,
     reference_number: letter.referenceNumber ?? null,
     sequence_number: letter.sequenceNumber ?? null,
     student: student ? serializeStudent(student) : null,
@@ -88,6 +89,7 @@ export function serializeCertificate(cert: CertificateRow, student: StudentRow |
     created_at: toIso(cert.generatedAt),
     file_url: cert.fileUrl,
     status: cert.status,
+    email_status: (cert as any).emailStatus ?? null,
     student: student ? serializeStudent(student) : null,
   };
 }

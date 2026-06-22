@@ -99,10 +99,10 @@ export default function AdminPayments() {
                       <div>{p.student?.full_name ?? '—'}</div>
                       <div className="text-xs text-muted-foreground">{p.student?.email}</div>
                     </TableCell>
-                    <TableCell>₹{parseFloat(p.total_fee || '0').toLocaleString()}</TableCell>
-                    <TableCell>₹{parseFloat(p.amount_paid || '0').toLocaleString()}</TableCell>
+                    <TableCell>{parseFloat(p.total_fee || '0') === 0 ? '' : `₹${parseFloat(p.total_fee).toLocaleString()}`}</TableCell>
+                    <TableCell>{parseFloat(p.amount_paid || '0') === 0 ? '' : `₹${parseFloat(p.amount_paid).toLocaleString()}`}</TableCell>
                     <TableCell className={parseFloat(p.balance_amount || '0') > 0 ? 'text-rose-600 font-medium' : 'text-emerald-600 font-medium'}>
-                      ₹{parseFloat(p.balance_amount || '0').toLocaleString()}
+                      {parseFloat(p.balance_amount || '0') === 0 ? '' : `₹${parseFloat(p.balance_amount).toLocaleString()}`}
                     </TableCell>
                     <TableCell>{statusBadge(p.payment_status)}</TableCell>
                     <TableCell className="text-sm text-muted-foreground">

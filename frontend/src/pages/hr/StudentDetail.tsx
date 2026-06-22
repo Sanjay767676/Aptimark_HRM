@@ -227,15 +227,15 @@ export default function StudentDetail() {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Total Fee:</span>
-                      <span className="font-medium">₹{parseFloat(String(student.payment.total_fee ?? 0)).toLocaleString()}</span>
+                      <span className="font-medium">{parseFloat(String(student.payment.total_fee ?? 0)) === 0 ? '' : `₹${parseFloat(String(student.payment.total_fee)).toLocaleString()}`}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Amount Paid:</span>
-                      <span className="font-medium text-emerald-600">₹{parseFloat(String(student.payment.amount_paid ?? 0)).toLocaleString()}</span>
+                      <span className="font-medium text-emerald-600">{parseFloat(String(student.payment.amount_paid ?? 0)) === 0 ? '' : `₹${parseFloat(String(student.payment.amount_paid)).toLocaleString()}`}</span>
                     </div>
                     <div className="flex justify-between border-t pt-2 mt-2">
                       <span className="font-medium">Balance Due:</span>
-                      <span className="font-bold text-rose-600">₹{parseFloat(String(student.payment.balance_amount ?? 0)).toLocaleString()}</span>
+                      <span className="font-bold text-rose-600">{parseFloat(String(student.payment.balance_amount ?? 0)) === 0 ? '' : `₹${parseFloat(String(student.payment.balance_amount)).toLocaleString()}`}</span>
                     </div>
                   </div>
 

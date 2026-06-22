@@ -11,6 +11,7 @@ export const certificatesTable = pgTable("certificates", {
   generatedAt: timestamp("generated_at", { withTimezone: true }).notNull().defaultNow(),
   fileUrl: text("file_url"),
   status: text("status").notNull().default("not_issued"),
+  emailStatus: text("email_status"),
 });
 
 export const insertCertificateSchema = createInsertSchema(certificatesTable).omit({
