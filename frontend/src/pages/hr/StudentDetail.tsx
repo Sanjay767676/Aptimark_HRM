@@ -68,8 +68,8 @@ export default function StudentDetail() {
         end_date: student.end_date.split('T')[0],
       });
       if (student.payment) {
-        const feeVal = student.payment.total_fee ? parseFloat(student.payment.total_fee) : 0;
-        const paidVal = student.payment.amount_paid ? parseFloat(student.payment.amount_paid) : 0;
+        const feeVal = student.payment.total_fee ? parseFloat(String(student.payment.total_fee)) : 0;
+        const paidVal = student.payment.amount_paid ? parseFloat(String(student.payment.amount_paid)) : 0;
         paymentForm.reset({
           total_fee: feeVal === 0 ? '' : feeVal as any,
           amount_paid: paidVal === 0 ? '' : paidVal as any,

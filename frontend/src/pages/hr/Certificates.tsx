@@ -22,6 +22,8 @@ function printCertificate(cert: any) {
   const win = window.open('', '_blank');
   if (!win) return;
   const issueDate = cert.created_at ? format(new Date(cert.created_at), 'MMMM d, yyyy') : '—';
+  const paidVal = student?.payment?.amount_paid ? parseFloat(String(student.payment.amount_paid)) : 0;
+  const feeVal = student?.payment?.total_fee ? parseFloat(String(student.payment.total_fee)) : 0;
   const start = student?.start_date ? format(new Date(student.start_date), 'MMMM d, yyyy') : '—';
   const end = student?.end_date ? format(new Date(student.end_date), 'MMMM d, yyyy') : '—';
   win.document.write(`
@@ -193,10 +195,10 @@ export default function Certificates() {
                   <input
                     type="checkbox"
                     className="rounded border-gray-300 accent-primary w-4 h-4 cursor-pointer"
-                    checked={certs?.length > 0 && selectedMailIds.length === certs.length}
+                    checked={certs?.length > 0 && selectedMailIds.length === certs?.length}
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setSelectedMailIds(certs.map((c: any) => c.id));
+                        setSelectedMailIds(certs?.map((c: any) => c.id) ?? []);
                       } else {
                         setSelectedMailIds([]);
                       }

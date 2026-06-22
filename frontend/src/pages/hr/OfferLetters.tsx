@@ -222,10 +222,10 @@ export default function OfferLetters() {
                   <input
                     type="checkbox"
                     className="rounded border-gray-300 accent-primary w-4 h-4 cursor-pointer"
-                    checked={letters?.length > 0 && selectedMailIds.length === letters.length}
+                    checked={letters?.length > 0 && selectedMailIds.length === letters?.length}
                     onChange={(e) => {
                       if (e.target.checked) {
-                        setSelectedMailIds(letters.map((l: any) => l.id));
+                        setSelectedMailIds(letters?.map((l: any) => l.id) ?? []);
                       } else {
                         setSelectedMailIds([]);
                       }
