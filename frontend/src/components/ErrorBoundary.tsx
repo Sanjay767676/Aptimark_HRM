@@ -16,6 +16,7 @@ export class ErrorBoundary extends Component<Props, State> {
   };
 
   public static getDerivedStateFromError(error: Error): State {
+    console.log("ErrorBoundary getDerivedStateFromError caught error:", error);
     return { hasError: true, error };
   }
 
@@ -24,6 +25,7 @@ export class ErrorBoundary extends Component<Props, State> {
   }
 
   public render() {
+    console.log("ErrorBoundary rendering. hasError:", this.state.hasError);
     if (this.state.hasError) {
       return (
         <div style={{ padding: "40px", fontFamily: "monospace", color: "#721c24", backgroundColor: "#f8d7da", border: "1px solid #f5c6cb", borderRadius: "4px", margin: "20px" }}>
