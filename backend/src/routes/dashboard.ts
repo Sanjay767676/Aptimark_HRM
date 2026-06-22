@@ -9,7 +9,7 @@ router.get("/dashboard/hr-summary", async (req, res) => {
     const result = await db.execute(sql`
       SELECT
         (SELECT count(*)::int FROM students) AS total_students,
-        (SELECT count(*)::int FROM offer_letters WHERE status = 'generated') AS offer_letters_generated,
+        (SELECT count(DISTINCT student_id)::int FROM offer_letters WHERE status = 'generated') AS offer_letters_generated,
         (SELECT count(*)::int FROM certificates WHERE status = 'issued') AS certificates_issued,
         (SELECT count(*)::int FROM payments WHERE payment_status = 'pending') AS pending_payments,
         (SELECT count(*)::int FROM payments WHERE payment_status = 'partial') AS partial_payments
@@ -37,7 +37,7 @@ router.get("/dashboard/admin-summary", async (req, res) => {
     const result = await db.execute(sql`
       SELECT
         (SELECT count(*)::int FROM students) AS total_students,
-        (SELECT count(*)::int FROM offer_letters WHERE status = 'generated') AS offer_letters_generated,
+        (SELECT count(DISTINCT student_id)::int FROM offer_letters WHERE status = 'generated') AS offer_letters_generated,
         (SELECT count(*)::int FROM certificates WHERE status = 'issued') AS certificates_issued,
         COALESCE((SELECT SUM(total_fee::numeric) FROM payments), 0) AS total_revenue,
         COALESCE((SELECT SUM(amount_paid::numeric) FROM payments), 0) AS paid_revenue,

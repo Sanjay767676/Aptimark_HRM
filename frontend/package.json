@@ -74,6 +74,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.108.1",
     "esbuild": "0.28.1",
-    "radix-ui": "^1.5.0"
+    "radix-ui": "^1.5.0",
+    "xlsx": "^0.18.5"
   }
 }

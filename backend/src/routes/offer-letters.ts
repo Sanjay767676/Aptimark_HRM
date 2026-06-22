@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, offerLettersTable, studentsTable } from "@workspace/db";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, desc } from "drizzle-orm";
 import { serializeOfferLetter } from "../lib/serialize";
 import { logRouteError } from "../lib/log-route-error";
 import { deleteSupabaseFile } from "../lib/supabase-storage";
@@ -23,9 +23,17 @@ router.get("/offer-letters", async (req, res) => {
       .select({ letter: offerLettersTable, student: studentsTable })
       .from(offerLettersTable)
       .leftJoin(studentsTable, eq(studentsTable.id, offerLettersTable.studentId))
-      .where(conditions.length > 0 ? and(...conditions) : undefined);
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(offerLettersTable.generatedAt));
 
-    res.json(rows.map(({ letter, student }) => serializeOfferLetter(letter, student ?? null)));
+    const latestByStudent = new Map<string, (typeof rows)[number]>();
+    for (const row of rows) {
+      if (!latestByStudent.has(row.letter.studentId)) {
+        latestByStudent.set(row.letter.studentId, row);
+      }
+    }
+
+    res.json([...latestByStudent.values()].map(({ letter, student }) => serializeOfferLetter(letter, student ?? null)));
   } catch (err) {
     logRouteError(req.log, "Error listing offer letters", err);
     res.status(500).json({ error: "Internal server error" });
@@ -62,14 +70,26 @@ router.post("/offer-letters", async (req, res): Promise<void> => {
       }
     };
 
-    const maxResult = await db
-      .select({ maxSeq: sql<number>`max(sequence_number)::int` })
-      .from(offerLettersTable);
-    const nextSeq = Math.max(100, maxResult[0]?.maxSeq ?? 100) + 1;
+    const [existingLetter] = await db
+      .select()
+      .from(offerLettersTable)
+      .where(eq(offerLettersTable.studentId, student_id))
+      .orderBy(desc(offerLettersTable.generatedAt))
+      .limit(1);
+    const existingOffer = existingLetter as
+      | (typeof existingLetter & { sequenceNumber?: number | null; referenceNumber?: string | null })
+      | undefined;
+
+    const maxResult = existingOffer?.sequenceNumber
+      ? []
+      : await db
+          .select({ maxSeq: sql<number>`max(sequence_number)::int` })
+          .from(offerLettersTable);
+    const nextSeq = existingOffer?.sequenceNumber ?? Math.max(100, maxResult[0]?.maxSeq ?? 100) + 1;
 
     const pdfData = {
       candidate_name: student.fullName,
-      reference_no: `AMS/HR/INT/${new Date(student.startDate).getFullYear()}/${nextSeq}`,
+      reference_no: existingOffer?.referenceNumber ?? `AMS/HR/INT/${new Date(student.startDate).getFullYear()}/${nextSeq}`,
       date: new Date(student.startDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
       internship_domain: student.internshipRole,
       from_date: new Date(student.startDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
@@ -147,16 +167,28 @@ router.post("/offer-letters", async (req, res): Promise<void> => {
       fileUrl = `/api/public/pdfs/${filename}`;
     }
 
-    const [letter] = await db
-      .insert(offerLettersTable)
-      .values({
-        studentId: student_id,
-        status: "generated",
-        fileUrl,
-        referenceNumber: pdfData.reference_no,
-        sequenceNumber: nextSeq,
-      })
-      .returning();
+    const [letter] = existingLetter
+      ? await db
+          .update(offerLettersTable)
+          .set({
+            status: "generated",
+            fileUrl,
+            referenceNumber: pdfData.reference_no,
+            sequenceNumber: nextSeq,
+            generatedAt: new Date(),
+          } as Partial<typeof offerLettersTable.$inferInsert>)
+          .where(eq(offerLettersTable.id, existingLetter.id))
+          .returning()
+      : await db
+          .insert(offerLettersTable)
+          .values({
+            studentId: student_id,
+            status: "generated",
+            fileUrl,
+            referenceNumber: pdfData.reference_no,
+            sequenceNumber: nextSeq,
+          } as typeof offerLettersTable.$inferInsert)
+          .returning();
 
     res.status(201).json(serializeOfferLetter(letter, student));
   } catch (err) {

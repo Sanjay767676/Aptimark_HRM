@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useListCertificates, useCreateCertificate, useListStudents } from '@workspace/api-client-react';
+import { getListCertificatesQueryKey, useListCertificates, useCreateCertificate, useListStudents } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,7 @@ import { useMutation } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
+import { apiRequest } from '@/lib/api';
 
 function printCertificate(cert: any) {
   const student = cert.student;
@@ -65,7 +66,7 @@ export default function Certificates() {
     mutation: {
       onSuccess: () => {
         toast({ title: 'Certificate issued successfully' });
-        queryClient.invalidateQueries({ queryKey: ['/api/certificates'] });
+        queryClient.invalidateQueries({ queryKey: getListCertificatesQueryKey({}) });
         setOpen(false);
         setSelectedStudent('');
       },
@@ -75,12 +76,11 @@ export default function Certificates() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/certificates/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Delete failed');
+      await apiRequest(`/api/certificates/${id}`, { method: 'DELETE' });
     },
     onSuccess: () => {
       toast({ title: 'Certificate removed' });
-      queryClient.invalidateQueries({ queryKey: ['/api/certificates'] });
+      queryClient.invalidateQueries({ queryKey: getListCertificatesQueryKey({}) });
     },
     onError: () => toast({ title: 'Failed to delete certificate', variant: 'destructive' }),
   });

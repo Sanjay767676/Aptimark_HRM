@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useListOfferLetters, useCreateOfferLetter, useListStudents } from '@workspace/api-client-react';
+import { getListOfferLettersQueryKey, useListOfferLetters, useCreateOfferLetter, useListStudents } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,6 +12,7 @@ import { useMutation } from '@tanstack/react-query';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
+import { apiRequest } from '@/lib/api';
 
 function printOfferLetter(letter: any) {
   const student = letter.student;
@@ -50,7 +51,7 @@ export default function AdminOfferLetters() {
   const createMutation = useCreateOfferLetter({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: ['/api/offer-letters'] });
+        queryClient.invalidateQueries({ queryKey: getListOfferLettersQueryKey({}) });
       },
     },
   });
@@ -87,7 +88,7 @@ export default function AdminOfferLetters() {
       title: 'Bulk generation complete',
       description: `Successfully generated ${successCount} offer letter(s).${failCount > 0 ? ` Failed: ${failCount}` : ''}`,
     });
-    queryClient.invalidateQueries({ queryKey: ['/api/offer-letters'] });
+    queryClient.invalidateQueries({ queryKey: getListOfferLettersQueryKey({}) });
   };
 
   const handleOpenChange = (isOpen: boolean) => {
@@ -101,12 +102,11 @@ export default function AdminOfferLetters() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/offer-letters/${id}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Delete failed');
+      await apiRequest(`/api/offer-letters/${id}`, { method: 'DELETE' });
     },
     onSuccess: () => {
       toast({ title: 'Offer letter removed' });
-      queryClient.invalidateQueries({ queryKey: ['/api/offer-letters'] });
+      queryClient.invalidateQueries({ queryKey: getListOfferLettersQueryKey({}) });
     },
     onError: () => toast({ title: 'Failed to delete offer letter', variant: 'destructive' }),
   });

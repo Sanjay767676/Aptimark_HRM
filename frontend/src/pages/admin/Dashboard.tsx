@@ -1,6 +1,6 @@
 import { useGetAdminSummary, useGetMonthlyRevenue, useGetPaymentBreakdown, useGetStudentGrowth } from '@workspace/api-client-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Users, FileText, Award, DollarSign, Wallet, PiggyBank } from 'lucide-react';
+import { Users, FileText, Award, IndianRupee, Wallet, PiggyBank } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, CartesianGrid, Line, LineChart, PieChart, Pie, Cell } from 'recharts';
@@ -10,6 +10,12 @@ export default function AdminDashboard() {
   const { data: monthlyRevenue, isLoading: isLoadingRev } = useGetMonthlyRevenue();
   const { data: paymentBreakdown, isLoading: isLoadingPie } = useGetPaymentBreakdown();
   const { data: studentGrowth, isLoading: isLoadingGrowth } = useGetStudentGrowth();
+  const formatCurrency = (value?: number) =>
+    new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(value ?? 0);
 
   const stats = [
     {
@@ -21,21 +27,21 @@ export default function AdminDashboard() {
     },
     {
       title: "Total Revenue",
-      value: summary?.total_revenue ? `$${summary.total_revenue.toLocaleString()}` : '$0',
-      icon: DollarSign,
+      value: formatCurrency(summary?.total_revenue),
+      icon: IndianRupee,
       color: "text-emerald-500",
       bgColor: "bg-emerald-500/10",
     },
     {
       title: "Paid Revenue",
-      value: summary?.paid_revenue ? `$${summary.paid_revenue.toLocaleString()}` : '$0',
+      value: formatCurrency(summary?.paid_revenue),
       icon: Wallet,
       color: "text-teal-500",
       bgColor: "bg-teal-500/10",
     },
     {
       title: "Pending Revenue",
-      value: summary?.pending_revenue ? `$${summary.pending_revenue.toLocaleString()}` : '$0',
+      value: formatCurrency(summary?.pending_revenue),
       icon: PiggyBank,
       color: "text-rose-500",
       bgColor: "bg-rose-500/10",
@@ -113,10 +119,11 @@ export default function AdminDashboard() {
                   <BarChart data={monthlyRevenue ?? []} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                     <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} />
-                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `$${value}`} />
+                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => formatCurrency(Number(value))} />
                     <Tooltip 
                       contentStyle={{ backgroundColor: 'hsl(var(--popover))', borderColor: 'hsl(var(--border))' }}
                       itemStyle={{ color: 'hsl(var(--foreground))' }}
+                      formatter={(value) => formatCurrency(Number(value))}
                     />
                     <Legend />
                     <Bar dataKey="paid" name="Paid" fill="#10b981" radius={[4, 4, 0, 0]} stackId="a" />
