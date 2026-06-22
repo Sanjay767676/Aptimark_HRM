@@ -54,60 +54,57 @@ const queryClient = new QueryClient({
 });
 
 function AnimatedRoutes() {
-  const [location] = useLocation();
-  console.log("AnimatedRoutes: Rendering started. Current path:", location);
+  console.log("AnimatedRoutes: Rendering started.");
 
   return (
-    <AnimatePresence mode="wait">
-      <Suspense fallback={<PageLoader />} key={location}>
-        <Switch location={location}>
-          <Route path="/login" component={Login} />
+    <Suspense fallback={<PageLoader />}>
+      <Switch>
+        <Route path="/login" component={Login} />
 
-          {/* ── HR Portal ─────────────────────────────── */}
-          <Route path="/hr/*">
-            <ProtectedRoute allowedRoles={['hr']}>
-              <HrLayout>
-                <Switch>
-                  <Route path="/hr/dashboard"     component={HrDashboard} />
-                  <Route path="/hr/students/new"  component={HrNewStudent} />
-                  <Route path="/hr/students/:id"  component={HrStudentDetail} />
-                  <Route path="/hr/students"      component={HrStudents} />
-                  <Route path="/hr/offer-letters" component={HrOfferLetters} />
-                  <Route path="/hr/certificates"  component={HrCertificates} />
-                  <Route path="/hr/payments"      component={HrPayments} />
-                  <Route path="/hr/settings"      component={HrSettings} />
-                  <Route component={NotFound} />
-                </Switch>
-              </HrLayout>
-            </ProtectedRoute>
-          </Route>
+        {/* ── HR Portal ─────────────────────────────── */}
+        <Route path="/hr/*">
+          <ProtectedRoute allowedRoles={['hr']}>
+            <HrLayout>
+              <Switch>
+                <Route path="/hr/dashboard"     component={HrDashboard} />
+                <Route path="/hr/students/new"  component={HrNewStudent} />
+                <Route path="/hr/students/:id"  component={HrStudentDetail} />
+                <Route path="/hr/students"      component={HrStudents} />
+                <Route path="/hr/offer-letters" component={HrOfferLetters} />
+                <Route path="/hr/certificates"  component={HrCertificates} />
+                <Route path="/hr/payments"      component={HrPayments} />
+                <Route path="/hr/settings"      component={HrSettings} />
+                <Route component={NotFound} />
+              </Switch>
+            </HrLayout>
+          </ProtectedRoute>
+        </Route>
 
-          {/* ── Admin Portal ──────────────────────────── */}
-          <Route path="/admin/*">
-            <ProtectedRoute allowedRoles={['admin']}>
-              <AdminLayout>
-                <Switch>
-                  <Route path="/admin/dashboard"     component={AdminDashboard} />
-                  <Route path="/admin/students/new"  component={HrNewStudent} />
-                  <Route path="/admin/students/:id"  component={HrStudentDetail} />
-                  <Route path="/admin/students"      component={AdminStudents} />
-                  <Route path="/admin/payments"      component={AdminPayments} />
-                  <Route path="/admin/users"         component={AdminUsers} />
-                  <Route path="/admin/settings"      component={AdminSettings} />
-                  <Route component={NotFound} />
-                </Switch>
-              </AdminLayout>
-            </ProtectedRoute>
-          </Route>
+        {/* ── Admin Portal ──────────────────────────── */}
+        <Route path="/admin/*">
+          <ProtectedRoute allowedRoles={['admin']}>
+            <AdminLayout>
+              <Switch>
+                <Route path="/admin/dashboard"     component={AdminDashboard} />
+                <Route path="/admin/students/new"  component={HrNewStudent} />
+                <Route path="/admin/students/:id"  component={HrStudentDetail} />
+                <Route path="/admin/students"      component={AdminStudents} />
+                <Route path="/admin/payments"      component={AdminPayments} />
+                <Route path="/admin/users"         component={AdminUsers} />
+                <Route path="/admin/settings"      component={AdminSettings} />
+                <Route component={NotFound} />
+              </Switch>
+            </AdminLayout>
+          </ProtectedRoute>
+        </Route>
 
-          <Route path="/">
-            {() => { window.location.href = "/login"; return null; }}
-          </Route>
+        <Route path="/">
+          {() => { window.location.href = "/login"; return null; }}
+        </Route>
 
-          <Route component={NotFound} />
-        </Switch>
-      </Suspense>
-    </AnimatePresence>
+        <Route component={NotFound} />
+      </Switch>
+    </Suspense>
   );
 }
 
