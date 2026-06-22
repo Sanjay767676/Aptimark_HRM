@@ -109,7 +109,7 @@ export default function Certificates() {
     }).filter(student => !student?.email);
 
     if (missingEmails.length > 0) {
-      alert(`The following student(s) do not have a registered email: ${missingEmails.map(s => s.full_name).join(', ')}. Please add their email ID first.`);
+      alert(`The following student(s) do not have a registered email: ${missingEmails.map(s => s?.full_name ?? '').join(', ')}. Please add their email ID first.`);
       return;
     }
 
@@ -195,7 +195,7 @@ export default function Certificates() {
                   <input
                     type="checkbox"
                     className="rounded border-gray-300 accent-primary w-4 h-4 cursor-pointer"
-                    checked={certs?.length > 0 && selectedMailIds.length === certs?.length}
+                    checked={(certs?.length ?? 0) > 0 && selectedMailIds.length === (certs?.length ?? 0)}
                     onChange={(e) => {
                       if (e.target.checked) {
                         setSelectedMailIds(certs?.map((c: any) => c.id) ?? []);
