@@ -111,18 +111,29 @@ function App() {
   console.log("App component: Rendering started.");
   return (
     <ErrorBoundary>
-      <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-        <QueryClientProvider client={queryClient}>
-          <AuthProvider>
-            <TooltipProvider>
-              <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-                <AnimatedRoutes />
-              </WouterRouter>
-              <Toaster />
-            </TooltipProvider>
-          </AuthProvider>
-        </QueryClientProvider>
-      </ThemeProvider>
+      {console.log("App: ErrorBoundary rendered.") || (
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+          {console.log("App: ThemeProvider rendered.") || (
+            <QueryClientProvider client={queryClient}>
+              {console.log("App: QueryClientProvider rendered.") || (
+                <AuthProvider>
+                  {console.log("App: AuthProvider rendered.") || (
+                    <TooltipProvider>
+                      {console.log("App: TooltipProvider rendered.") || (
+                        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+                          {console.log("App: WouterRouter rendered.") || (
+                            <AnimatedRoutes />
+                          )}
+                        </WouterRouter>
+                      )}
+                    </TooltipProvider>
+                  )}
+                </AuthProvider>
+              )}
+            </QueryClientProvider>
+          )}
+        </ThemeProvider>
+      )}
     </ErrorBoundary>
   );
 }
