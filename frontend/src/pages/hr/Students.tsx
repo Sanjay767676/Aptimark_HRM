@@ -22,7 +22,7 @@ export default function StudentsList() {
     if (!confirm('Are you sure you want to delete this student?')) return;
     await deleteStudent.mutateAsync({ id });
     setSelectedIds((prev) => prev.filter((item) => item !== id));
-    queryClient.invalidateQueries({ queryKey: ['listStudents'] });
+    queryClient.invalidateQueries({ queryKey: ['/api/students'] });
   };
 
   const handleBulkDelete = async () => {
@@ -31,9 +31,10 @@ export default function StudentsList() {
     try {
       await Promise.all(selectedIds.map(id => deleteStudent.mutateAsync({ id })));
       setSelectedIds([]);
-      queryClient.invalidateQueries({ queryKey: ['listStudents'] });
-      queryClient.invalidateQueries({ queryKey: ['getAdminSummary'] });
-      queryClient.invalidateQueries({ queryKey: ['listPayments'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/students'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/admin-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/dashboard/hr-summary'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/payments'] });
       alert('Selected students deleted successfully.');
     } catch (error) {
       console.error(error);
