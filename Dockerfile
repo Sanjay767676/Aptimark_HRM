@@ -1,48 +1,38 @@
-# ------------------------------------------------------------
-# 1️⃣ Builder stage – install deps and (optionally) compile TS
-# ------------------------------------------------------------
+# ---------- Build stage ----------
 FROM node:22-alpine AS builder
 
-# Install git (needed for some internal installs) and python for node‑gyp
-RUN apk add --no-cache git python3 make g++   # optional but safe
+# Install build‑time dependencies
+RUN apk add --no-cache \
+    python3 make g++ \
+    # Install Chromium for the final image (kept in cache)
+    chromium
 
 WORKDIR /app
 
-# Copy only lockfiles first – helps Docker cache layers
-COPY package.json ./
-COPY pnpm-lock.yaml ./
-COPY .npmrc ./
+# Copy only the files needed for install
+COPY package*.json ./
 COPY . .
 
-# Install all workspaces (including puppeteer)
-RUN npm ci
+# Install deps (uses lockfile that exists)
+RUN npm ci --omit=dev
 
-# ------------------------------------------------------------
-# 2️⃣ Runtime stage – install system Chrome and run the app
-# ------------------------------------------------------------
+# ---------- Runtime stage ----------
 FROM node:22-alpine
 
-# ---- Install Chromium (the headless browser) ----
-RUN apk add --no-cache \
-    chromium \
-    nss \
-    freetype \
-    harfbuzz \
-    ttf-freefont \
-    ca-certificates
-
-# Tell Puppeteer to use this binary
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
-# Optional: force Puppeteer to write its cache in a writable folder
-ENV PUPPETEER_CACHE_DIR=/tmp/puppeteer
+# Install Chromium runtime (same package name works)
+RUN apk add --no-cache chromium
 
 WORKDIR /app
 
-# Copy the built app from the builder stage
-COPY --from=builder /app .
+# Copy built files from builder
+COPY --from=builder /app /app
 
-# Expose the port your backend serves on (default 3000)
+# Tell Puppeteer to use the system Chromium
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
+    PUPPETEER_CACHE_DIR=/tmp/puppeteer
+
+# Optional: clean up npm cache to keep image small
+RUN npm prune --production && npm cache clean --force
+
 EXPOSE 3000
-
-# Default command – runs both backend and frontend in dev mode
-CMD ["npm", "run", "dev"]
+CMD ["npm", "run", "start"]
