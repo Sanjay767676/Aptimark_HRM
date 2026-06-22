@@ -1,20 +1,22 @@
 # ---------- Build stage ----------
 FROM node:22-alpine AS builder
 
-# Install build‑time dependencies
+# Install build-time dependencies (including Chromium for later use)
 RUN apk add --no-cache \
     python3 make g++ \
-    # Install Chromium for the final image (kept in cache)
     chromium
 
 WORKDIR /app
 
-# Copy only the files needed for install
+# Copy package files and install all dependencies (including dev for build)
 COPY package*.json ./
 COPY . .
+RUN npm ci
 
-# Install deps (uses lockfile that exists)
-RUN npm ci --omit=dev
+# Build the frontend (assumes workspace @workspace/hr-platform)
+RUN npm run build -w @workspace/hr-platform
+# Build the backend (TS compile)
+RUN npm run build -w @workspace/backend
 
 # ---------- Runtime stage ----------
 FROM node:22-alpine
@@ -24,10 +26,10 @@ RUN apk add --no-cache chromium
 
 WORKDIR /app
 
-# Copy built files from builder
+# Copy built files from builder stage
 COPY --from=builder /app /app
 
-# Tell Puppeteer to use the system Chromium
+# Configure Puppeteer to use system Chromium
 ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
     PUPPETEER_CACHE_DIR=/tmp/puppeteer
 
@@ -35,4 +37,6 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
 RUN npm prune --production && npm cache clean --force
 
 EXPOSE 3000
-CMD ["npm", "run", "start"]
+
+# Start the backend in production mode
+CMD ["npm", "run", "start", "-w", "@workspace/backend"]
