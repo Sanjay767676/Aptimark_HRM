@@ -4,6 +4,16 @@ import { eq } from "drizzle-orm";
 import path from "path";
 import fs from "fs/promises";
 
+// Default email configuration
+export const DEFAULT_SENDER = "hr@aptimarksolutions.in";
+export const DEFAULT_MESSAGE = `Dear {name},
+
+Congratulations! We are pleased to offer you an internship at Aptimark Solutions. Please find your offer letter attached.
+
+Warm regards,
+HR | Aptimark Solutions`;
+
+
 interface EmailJob {
   id: string;
   type: "offer-letter" | "certificate";

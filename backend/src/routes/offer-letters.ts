@@ -1,3 +1,4 @@
+
 import { Router } from "express";
 import { db, offerLettersTable, studentsTable } from "@workspace/db";
 import { eq, and, sql, desc } from "drizzle-orm";
@@ -5,7 +6,7 @@ import { serializeOfferLetter } from "../lib/serialize";
 import { logRouteError } from "../lib/log-route-error";
 import { deleteSupabaseFile } from "../lib/supabase-storage";
 import { pdfGenerator } from "../services/pdf-generator";
-import { emailQueue } from "../services/email-queue";
+import { emailQueue, DEFAULT_SENDER, DEFAULT_MESSAGE } from "../services/email-queue";
 import path from "path";
 import fs from "fs/promises";
 import crypto from "crypto";
@@ -13,7 +14,6 @@ import crypto from "crypto";
 const router = Router();
 
 router.get("/offer-letters", async (req, res) => {
-  try {
     const { status, student_id } = req.query as Record<string, string>;
 
     const conditions = [];
@@ -298,6 +298,29 @@ router.patch("/offer-letters/:id", async (req, res): Promise<void> => {
   }
 });
 
+router.post("/offer-letters/send-email", async (req, res): Promise<void> => {
+  try {
+    const { ids } = req.body as { ids: string[] };
+    if (!ids || !ids.length) {
+      res.status(400).json({ error: "ids are required" });
+      return;
+    }
+    for (const recordId of ids) {
+      await emailQueue.addJob({
+        id: crypto.randomUUID(),
+        type: "offer-letter",
+        recordId,
+        senderEmail: DEFAULT_SENDER,
+        congratsMessage: DEFAULT_MESSAGE,
+      });
+    }
+    res.json({ message: "Emails queued successfully" });
+  } catch (err) {
+    logRouteError(req.log, "Error sending offer letter email", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.delete("/offer-letters/:id", async (req, res): Promise<void> => {
   try {
     const { id } = req.params;
@@ -328,34 +351,6 @@ router.delete("/offer-letters/:id", async (req, res): Promise<void> => {
   }
 });
 
-router.post("/offer-letters/send-email", async (req, res): Promise<void> => {
-  try {
-    const { ids, sender_email, message } = req.body as {
-      ids: string[];
-      sender_email: string;
-      message: string;
-    };
 
-    if (!ids || !ids.length || !sender_email || !message) {
-      res.status(400).json({ error: "ids, sender_email, and message are required" });
-      return;
-    }
-
-    for (const recordId of ids) {
-      await emailQueue.addJob({
-        id: crypto.randomUUID(),
-        type: "offer-letter",
-        recordId,
-        senderEmail: sender_email,
-        congratsMessage: message,
-      });
-    }
-
-    res.json({ message: "Emails queued successfully" });
-  } catch (err) {
-    logRouteError(req.log, "Error sending offer letter email", err);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
 
 export default router;

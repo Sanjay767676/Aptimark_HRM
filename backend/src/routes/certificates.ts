@@ -5,7 +5,7 @@ import { serializeCertificate } from "../lib/serialize";
 import { logRouteError } from "../lib/log-route-error";
 import { deleteSupabaseFile } from "../lib/supabase-storage";
 import { pdfGenerator } from "../services/pdf-generator";
-import { emailQueue } from "../services/email-queue";
+import { emailQueue, DEFAULT_SENDER, DEFAULT_MESSAGE } from "../services/email-queue";
 import path from "path";
 import fs from "fs/promises";
 import crypto from "crypto";
@@ -205,14 +205,10 @@ router.delete("/certificates/:id", async (req, res): Promise<void> => {
 
 router.post("/certificates/send-email", async (req, res): Promise<void> => {
   try {
-    const { ids, sender_email, message } = req.body as {
-      ids: string[];
-      sender_email: string;
-      message: string;
-    };
+    const { ids } = req.body as { ids: string[] };
 
-    if (!ids || !ids.length || !sender_email || !message) {
-      res.status(400).json({ error: "ids, sender_email, and message are required" });
+    if (!ids || !ids.length) {
+      res.status(400).json({ error: "ids are required" });
       return;
     }
 
@@ -221,8 +217,8 @@ router.post("/certificates/send-email", async (req, res): Promise<void> => {
         id: crypto.randomUUID(),
         type: "certificate",
         recordId,
-        senderEmail: sender_email,
-        congratsMessage: message,
+        senderEmail: DEFAULT_SENDER,
+        congratsMessage: DEFAULT_MESSAGE,
       });
     }
 
