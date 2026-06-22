@@ -576,6 +576,7 @@ components:
         end_date: { type: string }
         total_fee: { type: number }
         amount_paid: { type: number }
+        payment_date: { type: string }
 
     StudentUpdate:
       type: object
@@ -609,6 +610,7 @@ components:
         amount_paid: { type: number }
         balance_amount: { type: number }
         payment_status: { type: string, enum: [paid, partial, pending] }
+        payment_date: { type: ["string", "null"] }
         updated_at: { type: ["string", "null"] }
 
     PaymentUpdate:
@@ -616,6 +618,7 @@ components:
       properties:
         total_fee: { type: number }
         amount_paid: { type: number }
+        payment_date: { type: string }
 
     # ── Offer Letter ──────────────────────────────────────────────────────────
     OfferLetter:

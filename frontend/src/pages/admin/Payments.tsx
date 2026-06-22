@@ -45,8 +45,10 @@ export default function AdminPayments() {
 
   const openEdit = (p: any) => {
     setEditPayment(p);
-    setTotalFee(p.total_fee ?? '');
-    setAmountPaid(p.amount_paid ?? '');
+    const feeVal = p.total_fee ? parseFloat(p.total_fee) : 0;
+    const paidVal = p.amount_paid ? parseFloat(p.amount_paid) : 0;
+    setTotalFee(feeVal === 0 ? '' : String(feeVal));
+    setAmountPaid(paidVal === 0 ? '' : String(paidVal));
   };
 
   return (
@@ -134,7 +136,13 @@ export default function AdminPayments() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditPayment(null)}>Cancel</Button>
-            <Button onClick={() => updateMutation.mutate({ id: editPayment.id, data: { total_fee: parseFloat(totalFee), amount_paid: parseFloat(amountPaid) } })}
+            <Button onClick={() => updateMutation.mutate({
+              id: editPayment.id,
+              data: {
+                total_fee: totalFee === '' ? 0 : parseFloat(totalFee),
+                amount_paid: amountPaid === '' ? 0 : parseFloat(amountPaid)
+              }
+            })}
               disabled={updateMutation.isPending}>
               {updateMutation.isPending ? 'Saving…' : 'Save'}
             </Button>

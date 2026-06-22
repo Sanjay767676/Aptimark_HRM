@@ -26,11 +26,11 @@ const studentUpdateSchema = z.object({
 const paymentUpdateSchema = z.object({
   total_fee: z.preprocess(
     (val) => (val === '' || val === undefined || val === null ? undefined : Number(val)),
-    z.number().min(0),
+    z.number().min(0).optional(),
   ),
   amount_paid: z.preprocess(
     (val) => (val === '' || val === undefined || val === null ? undefined : Number(val)),
-    z.number().min(0),
+    z.number().min(0).optional(),
   ),
 });
 
@@ -68,9 +68,11 @@ export default function StudentDetail() {
         end_date: student.end_date.split('T')[0],
       });
       if (student.payment) {
+        const feeVal = student.payment.total_fee ? parseFloat(student.payment.total_fee) : 0;
+        const paidVal = student.payment.amount_paid ? parseFloat(student.payment.amount_paid) : 0;
         paymentForm.reset({
-          total_fee: student.payment.total_fee,
-          amount_paid: student.payment.amount_paid,
+          total_fee: feeVal === 0 ? '' : feeVal as any,
+          amount_paid: paidVal === 0 ? '' : paidVal as any,
         });
       }
     }
@@ -93,8 +95,13 @@ export default function StudentDetail() {
   const onPaymentSubmit = (data: z.infer<typeof paymentUpdateSchema>) => {
     if (!student?.payment?.id) return;
     
+    const payload = {
+      total_fee: data.total_fee ?? 0,
+      amount_paid: data.amount_paid ?? 0,
+    };
+    
     updatePayment.mutate(
-      { id: student.payment.id, data },
+      { id: student.payment.id, data: payload },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getGetStudentQueryKey(id) });

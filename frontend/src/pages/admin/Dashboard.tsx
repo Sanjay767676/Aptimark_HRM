@@ -64,9 +64,9 @@ export default function AdminDashboard() {
   ];
 
   const pieData = [
-    { name: 'Paid', value: paymentBreakdown?.paid ?? 0, color: '#10b981' },
-    { name: 'Partial', value: paymentBreakdown?.partial ?? 0, color: '#f59e0b' },
-    { name: 'Pending', value: paymentBreakdown?.pending ?? 0, color: '#ef4444' },
+    { name: 'paid', value: paymentBreakdown?.paid ?? 0, color: '#10b981' },
+    { name: 'partial', value: paymentBreakdown?.partial ?? 0, color: '#f59e0b' },
+    { name: 'pending', value: paymentBreakdown?.pending ?? 0, color: '#ef4444' },
   ];
 
   const revenueChartConfig = {
@@ -128,7 +128,7 @@ export default function AdminDashboard() {
               </CardHeader>
               <CardContent>
                 {isLoadingSummary ? (
-                  <Skeleton className="h-7 w-24" />
+                   <Skeleton className="h-7 w-24" />
                 ) : (
                   <div className="text-2xl font-bold">{stat.value}</div>
                 )}
@@ -156,8 +156,8 @@ export default function AdminDashboard() {
                     <YAxis tickLine={false} axisLine={false} tickMargin={8} tickFormatter={(value) => formatCurrency(Number(value))} />
                     <ChartTooltip content={<ChartTooltipContent />} />
                     <ChartLegend content={<ChartLegendContent />} />
-                    <Bar dataKey="paid" name="Paid" fill="var(--color-paid)" radius={[4, 4, 0, 0]} stackId="a" isAnimationActive={true} animationDuration={1000} />
-                    <Bar dataKey="pending" name="Pending" fill="var(--color-pending)" radius={[4, 4, 0, 0]} stackId="a" isAnimationActive={true} animationDuration={1000} />
+                    <Bar dataKey="paid" fill="var(--color-paid)" radius={[4, 4, 0, 0]} stackId="a" isAnimationActive={true} animationDuration={1000} />
+                    <Bar dataKey="pending" fill="var(--color-pending)" radius={[4, 4, 0, 0]} stackId="a" isAnimationActive={true} animationDuration={1000} />
                   </BarChart>
                 </ChartContainer>
               </div>
@@ -185,6 +185,7 @@ export default function AdminDashboard() {
                       outerRadius={80}
                       paddingAngle={5}
                       dataKey="value"
+                      nameKey="name"
                       isAnimationActive={true}
                       animationDuration={1000}
                     >

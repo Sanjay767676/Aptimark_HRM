@@ -12,6 +12,7 @@ export const paymentsTable = pgTable("payments", {
   amountPaid: numeric("amount_paid", { precision: 10, scale: 2 }).notNull().default("0"),
   balanceAmount: numeric("balance_amount", { precision: 10, scale: 2 }).notNull().default("0"),
   paymentStatus: text("payment_status").notNull().default("pending"),
+  paymentDate: timestamp("payment_date", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });
 
