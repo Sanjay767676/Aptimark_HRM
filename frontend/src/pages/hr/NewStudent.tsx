@@ -14,6 +14,7 @@ import { ArrowLeft } from 'lucide-react';
 
 const studentSchema = z.object({
   full_name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
   internship_role: z.string().min(1, 'Role is required'),
   start_date: z.string().min(1, 'Start date is required'),
   end_date: z.string().min(1, 'End date is required'),
@@ -30,15 +31,18 @@ const studentSchema = z.object({
 type StudentFormValues = z.infer<typeof studentSchema>;
 
 export default function NewStudent() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const createStudent = useCreateStudent();
+
+  const redirectPath = location.startsWith('/admin') ? '/admin/students' : '/hr/students';
 
   const form = useForm<StudentFormValues>({
     resolver: zodResolver(studentSchema),
     defaultValues: {
       full_name: '',
+      email: '',
       internship_role: '',
       start_date: new Date().toISOString().split('T')[0],
       end_date: new Date(new Date().setMonth(new Date().getMonth() + 3)).toISOString().split('T')[0],
@@ -49,12 +53,12 @@ export default function NewStudent() {
 
   const onSubmit = (data: StudentFormValues) => {
     createStudent.mutate(
-      { data: { ...data, email: '' } },
+      { data },
       {
         onSuccess: () => {
           queryClient.invalidateQueries({ queryKey: getListStudentsQueryKey() });
           toast({ title: 'Student added successfully' });
-          setLocation('/hr/students');
+          setLocation(redirectPath);
         },
         onError: (error: any) => {
           toast({
@@ -70,7 +74,7 @@ export default function NewStudent() {
   return (
     <div className="space-y-6 max-w-3xl mx-auto">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => setLocation('/hr/students')} data-testid="button-back">
+        <Button variant="ghost" size="icon" onClick={() => setLocation(redirectPath)} data-testid="button-back">
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
@@ -113,6 +117,20 @@ export default function NewStudent() {
                 />
 
                 <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address (Optional)</FormLabel>
+                      <FormControl>
+                        <Input {...field} type="email" placeholder="email@example.com" data-testid="input-email" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                 <FormField
                   control={form.control}
                   name="start_date"
                   render={({ field }) => (
@@ -198,7 +216,7 @@ export default function NewStudent() {
               </div>
 
               <div className="flex justify-end gap-4 pt-4 border-t">
-                <Button type="button" variant="outline" onClick={() => setLocation('/hr/students')} data-testid="button-cancel">
+                <Button type="button" variant="outline" onClick={() => setLocation(redirectPath)} data-testid="button-cancel">
                   Cancel
                 </Button>
                 <Button type="submit" disabled={createStudent.isPending} data-testid="button-submit">

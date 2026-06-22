@@ -11,14 +11,17 @@ if (!process.env.DATABASE_URL) {
 }
 
 const connectionString = process.env.DATABASE_URL;
+// Supabase usually requires SSL; also support URLs that explicitly request it.
 const isSupabase = connectionString.includes("supabase");
+const urlRequestsSsl = connectionString.includes("sslmode=require") || connectionString.includes("ssl=true");
+const needsSsl = isSupabase || urlRequestsSsl || process.env.PGSSLMODE === "require";
 
 export const pool = new Pool({
   connectionString,
   max: 10,
   idleTimeoutMillis: 30_000,
   connectionTimeoutMillis: 10_000,
-  ...(isSupabase ? { ssl: { rejectUnauthorized: false } } : {}),
+  ...(needsSsl ? { ssl: { rejectUnauthorized: false } } : {}),
 });
 
 pool.on("error", (err) => {

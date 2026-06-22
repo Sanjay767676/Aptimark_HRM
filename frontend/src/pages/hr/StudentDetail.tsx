@@ -17,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 const studentUpdateSchema = z.object({
   full_name: z.string().min(1, 'Name is required'),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
   internship_role: z.string().min(1, 'Role is required'),
   start_date: z.string().min(1, 'Start date is required'),
   end_date: z.string().min(1, 'End date is required'),
@@ -34,11 +35,13 @@ const paymentUpdateSchema = z.object({
 });
 
 export default function StudentDetail() {
-  const [, params] = useRoute('/hr/students/:id');
-  const id = params?.id || '';
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
+  const [, hrParams] = useRoute('/hr/students/:id');
+  const [, adminParams] = useRoute('/admin/students/:id');
+  const id = hrParams?.id || adminParams?.id || '';
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const redirectPath = location.startsWith('/admin') ? '/admin/students' : '/hr/students';
 
   const { data: student, isLoading } = useGetStudent(id, { 
     query: { enabled: !!id, queryKey: getGetStudentQueryKey(id) } 
@@ -59,6 +62,7 @@ export default function StudentDetail() {
     if (student) {
       studentForm.reset({
         full_name: student.full_name,
+        email: student.email ?? '',
         internship_role: student.internship_role,
         start_date: student.start_date.split('T')[0],
         end_date: student.end_date.split('T')[0],
@@ -112,7 +116,7 @@ export default function StudentDetail() {
   return (
     <div className="space-y-6 max-w-5xl mx-auto">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => setLocation('/hr/students')} data-testid="button-back">
+        <Button variant="ghost" size="icon" onClick={() => setLocation(redirectPath)} data-testid="button-back">
           <ArrowLeft className="h-4 w-4" />
         </Button>
         <div>
@@ -136,26 +140,36 @@ export default function StudentDetail() {
                 <form onSubmit={studentForm.handleSubmit(onStudentSubmit)} className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <FormField
-                      control={studentForm.control}
-                      name="full_name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Full Name</FormLabel>
-                          <FormControl><Input {...field} /></FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={studentForm.control}
-                      name="internship_role"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Role</FormLabel>
-                          <FormControl><Input {...field} /></FormControl>
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
+                       control={studentForm.control}
+                       name="full_name"
+                       render={({ field }) => (
+                         <FormItem>
+                           <FormLabel>Full Name</FormLabel>
+                           <FormControl><Input {...field} /></FormControl>
+                         </FormItem>
+                       )}
+                     />
+                     <FormField
+                       control={studentForm.control}
+                       name="email"
+                       render={({ field }) => (
+                         <FormItem>
+                           <FormLabel>Email Address (Optional)</FormLabel>
+                           <FormControl><Input {...field} type="email" placeholder="email@example.com" /></FormControl>
+                         </FormItem>
+                       )}
+                     />
+                     <FormField
+                       control={studentForm.control}
+                       name="internship_role"
+                       render={({ field }) => (
+                         <FormItem>
+                           <FormLabel>Role</FormLabel>
+                           <FormControl><Input {...field} /></FormControl>
+                         </FormItem>
+                       )}
+                     />
+                     <FormField
                       control={studentForm.control}
                       name="start_date"
                       render={({ field }) => (

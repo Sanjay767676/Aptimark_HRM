@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { db, offerLettersTable, studentsTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { serializeOfferLetter } from "../lib/serialize";
 import { logRouteError } from "../lib/log-route-error";
 import { deleteSupabaseFile } from "../lib/supabase-storage";
@@ -62,23 +62,42 @@ router.post("/offer-letters", async (req, res): Promise<void> => {
       }
     };
 
+    const maxResult = await db
+      .select({ maxSeq: sql<number>`max(sequence_number)::int` })
+      .from(offerLettersTable);
+    const nextSeq = Math.max(100, maxResult[0]?.maxSeq ?? 100) + 1;
+
     const pdfData = {
       candidate_name: student.fullName,
-      reference_no: `AMS/HR/INT/${new Date().getFullYear()}/101`,
-      offer_date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      reference_no: `AMS/HR/INT/${new Date(student.startDate).getFullYear()}/${nextSeq}`,
+      date: new Date(student.startDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
       internship_domain: student.internshipRole,
+      from_date: new Date(student.startDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      to_date: new Date(student.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      company_name: "Aptimark Solutions",
+      tagline: "Smart Solutions . Better Tomorrow",
+      address: "No -8/2 , Venus Garden Street , Sundapalayam , Coimbatore.",
+      email: "contact@aptimarksolutions.in",
+      website: "www.aptimarksolutions.in",
+      signatory_name: "Sinega S",
+      designation: "HR | Aptimark Solutions",
+      company_logo: await getBase64Image("Company_Logo.png"),
+      signature_image: await getBase64Image("Hr_Sign.png"),
+      ceo_signature_image: await getBase64Image("Sign 2.png"),
+      company_seal: await getBase64Image("Hr_Sign.png"),
+      watermark_logo: await getBase64Image("Watermark.png"),
+      msme_logo: await getBase64Image("Fotter.png"),
+      footer_design: await getBase64Image("Fotterdesign.png"),
+      // Backward-compatible keys for any older template references.
+      offer_date: new Date(student.startDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
       start_date: new Date(student.startDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
       end_date: new Date(student.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
       hr_name: "Sinega S",
-      company_name: "Aptimark Solutions",
-      company_tagline: "Smart Solutions . Better Tomorrrow",
+      company_tagline: "Smart Solutions . Better Tomorrow",
       company_address: "No -8/2 , Venus Garden Street , Sundapalayam , Coimbatore.",
       company_email: "contact@aptimarksolutions.in",
       company_website: "www.aptimarksolutions.in",
-      company_logo: await getBase64Image("Company_Logo.png"),
-      signature_image: await getBase64Image("Hr_Sign.png"),
-      watermark_logo: await getBase64Image("Watermark.png"),
-      footer_logo: await getBase64Image("Fotter.png")
+      footer_logo: await getBase64Image("Fotter.png"),
     };
 
     const pdfBuffer = await pdfGenerator.generateOfferLetter(pdfData);
@@ -99,7 +118,9 @@ router.post("/offer-letters", async (req, res): Promise<void> => {
           headers: {
             "Authorization": `Bearer ${supabaseKey}`,
             "apikey": supabaseKey,
-            "Content-Type": "application/pdf"
+            "Content-Type": "application/pdf",
+            // Avoid duplicate upload errors when regenerating the same letter.
+            "x-upsert": "true",
           },
           body: pdfBuffer
         });
@@ -122,12 +143,19 @@ router.post("/offer-letters", async (req, res): Promise<void> => {
       await fs.mkdir(publicDir, { recursive: true });
       const filePath = path.join(publicDir, filename);
       await fs.writeFile(filePath, pdfBuffer);
-      fileUrl = `/public/pdfs/${filename}`;
+      // Use API origin so links open correctly from frontend dev server (5173).
+      fileUrl = `/api/public/pdfs/${filename}`;
     }
 
     const [letter] = await db
       .insert(offerLettersTable)
-      .values({ studentId: student_id, status: "generated", fileUrl })
+      .values({
+        studentId: student_id,
+        status: "generated",
+        fileUrl,
+        referenceNumber: pdfData.reference_no,
+        sequenceNumber: nextSeq,
+      })
       .returning();
 
     res.status(201).json(serializeOfferLetter(letter, student));

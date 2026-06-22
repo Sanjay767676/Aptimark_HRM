@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uuid, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { studentsTable } from "./students";
@@ -11,6 +11,8 @@ export const offerLettersTable = pgTable("offer_letters", {
   generatedAt: timestamp("generated_at", { withTimezone: true }).notNull().defaultNow(),
   fileUrl: text("file_url"),
   status: text("status").notNull().default("not_generated"),
+  referenceNumber: text("reference_number"),
+  sequenceNumber: integer("sequence_number"),
 });
 
 export const insertOfferLetterSchema = createInsertSchema(offerLettersTable).omit({

@@ -2,10 +2,10 @@ import { useState } from 'react';
 import { useListOfferLetters, useCreateOfferLetter, useListStudents } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { FileText, Plus, Printer, Trash2 } from 'lucide-react';
 import { useMutation } from '@tanstack/react-query';
@@ -38,7 +38,10 @@ function printOfferLetter(letter: any) {
 
 export default function AdminOfferLetters() {
   const [open, setOpen] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState('');
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isGeneratingBulk, setIsGeneratingBulk] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -47,14 +50,54 @@ export default function AdminOfferLetters() {
   const createMutation = useCreateOfferLetter({
     mutation: {
       onSuccess: () => {
-        toast({ title: 'Offer letter generated' });
         queryClient.invalidateQueries({ queryKey: ['/api/offer-letters'] });
-        setOpen(false);
-        setSelectedStudent('');
       },
-      onError: () => toast({ title: 'Failed to generate', variant: 'destructive' }),
     },
   });
+
+  const filteredStudents = students?.data.filter((s: any) => 
+    s.full_name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    s.internship_role.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
+
+  const handleGenerate = async () => {
+    if (selectedStudents.length === 0) return;
+    setIsGeneratingBulk(true);
+    setBulkProgress({ current: 0, total: selectedStudents.length });
+    
+    let successCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < selectedStudents.length; i++) {
+      const studentId = selectedStudents[i];
+      setBulkProgress({ current: i + 1, total: selectedStudents.length });
+      try {
+        await createMutation.mutateAsync({ data: { student_id: studentId } });
+        successCount++;
+      } catch (err) {
+        failCount++;
+      }
+    }
+
+    setIsGeneratingBulk(false);
+    setSelectedStudents([]);
+    setOpen(false);
+    
+    toast({
+      title: 'Bulk generation complete',
+      description: `Successfully generated ${successCount} offer letter(s).${failCount > 0 ? ` Failed: ${failCount}` : ''}`,
+    });
+    queryClient.invalidateQueries({ queryKey: ['/api/offer-letters'] });
+  };
+
+  const handleOpenChange = (isOpen: boolean) => {
+    if (isGeneratingBulk) return;
+    setOpen(isOpen);
+    if (!isOpen) {
+      setSelectedStudents([]);
+      setSearchQuery('');
+    }
+  };
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
@@ -138,21 +181,80 @@ export default function AdminOfferLetters() {
         </div>
       </motion.div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent className="max-w-md">
           <DialogHeader><DialogTitle>Generate Offer Letter</DialogTitle></DialogHeader>
-          <div className="py-2">
-            <Select value={selectedStudent} onValueChange={setSelectedStudent}>
-              <SelectTrigger><SelectValue placeholder="Select a student…" /></SelectTrigger>
-              <SelectContent>
-                {students?.data.map((s: any) => <SelectItem key={s.id} value={s.id}>{s.full_name} — {s.internship_role}</SelectItem>)}
-              </SelectContent>
-            </Select>
+          <div className="py-2 space-y-4">
+            <Input
+              placeholder="Search students..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              disabled={isGeneratingBulk}
+            />
+
+            <div className="border rounded-md p-3 max-h-60 overflow-y-auto space-y-2">
+              <div className="flex items-center space-x-2 border-b pb-2 mb-2">
+                <input
+                  type="checkbox"
+                  id="select-all"
+                  className="rounded border-gray-300 accent-primary w-4 h-4 cursor-pointer"
+                  checked={filteredStudents.length > 0 && selectedStudents.length === filteredStudents.length}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedStudents(filteredStudents.map((s: any) => s.id));
+                    } else {
+                      setSelectedStudents([]);
+                    }
+                  }}
+                  disabled={isGeneratingBulk}
+                />
+                <label htmlFor="select-all" className="text-sm font-semibold cursor-pointer select-none">
+                  Select All / Deselect All
+                </label>
+              </div>
+
+              {filteredStudents.map((s: any) => {
+                const isChecked = selectedStudents.includes(s.id);
+                return (
+                  <div key={s.id} className="flex items-center space-x-2 py-1">
+                    <input
+                      type="checkbox"
+                      id={`student-${s.id}`}
+                      className="rounded border-gray-300 accent-primary w-4 h-4 cursor-pointer"
+                      checked={isChecked}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedStudents([...selectedStudents, s.id]);
+                        } else {
+                          setSelectedStudents(selectedStudents.filter((id) => id !== s.id));
+                        }
+                      }}
+                      disabled={isGeneratingBulk}
+                    />
+                    <label htmlFor={`student-${s.id}`} className="text-sm cursor-pointer select-none flex-1">
+                      {s.full_name} <span className="text-muted-foreground text-xs">— {s.internship_role}</span>
+                    </label>
+                  </div>
+                );
+              })}
+
+              {filteredStudents.length === 0 && (
+                <div className="text-center text-sm text-muted-foreground py-4">
+                  No students found matching search.
+                </div>
+              )}
+            </div>
+
+            {isGeneratingBulk && (
+              <div className="text-sm text-center text-muted-foreground animate-pulse">
+                Generating {bulkProgress.current} of {bulkProgress.total} offer letters...
+              </div>
+            )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={() => createMutation.mutate({ data: { student_id: selectedStudent } })} disabled={!selectedStudent || createMutation.isPending}>
-              {createMutation.isPending ? 'Generating…' : 'Generate'}
+            <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={isGeneratingBulk}>Cancel</Button>
+            <Button onClick={handleGenerate} disabled={selectedStudents.length === 0 || isGeneratingBulk}>
+              {isGeneratingBulk ? 'Generating…' : `Generate (${selectedStudents.length})`}
             </Button>
           </DialogFooter>
         </DialogContent>

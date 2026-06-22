@@ -553,12 +553,11 @@ components:
     # ── Student ──────────────────────────────────────────────────────────────
     Student:
       type: object
-      required: [id, full_name, email, internship_role, start_date, end_date, created_at]
+      required: [id, full_name, internship_role, start_date, end_date, created_at]
       properties:
         id: { type: string }
         full_name: { type: string }
-        email: { type: string }
-        phone_number: { type: ["string", "null"] }
+        email: { type: ["string", "null"] }
         internship_role: { type: string }
         start_date: { type: string }
         end_date: { type: string }
@@ -572,7 +571,6 @@ components:
       properties:
         full_name: { type: string }
         email: { type: string }
-        phone_number: { type: string }
         internship_role: { type: string }
         start_date: { type: string }
         end_date: { type: string }
@@ -584,7 +582,6 @@ components:
       properties:
         full_name: { type: string }
         email: { type: string }
-        phone_number: { type: string }
         internship_role: { type: string }
         start_date: { type: string }
         end_date: { type: string }

@@ -66,6 +66,7 @@ app.use(express.urlencoded({ extended: true }));
 // Serve static files from public directory for PDFs
 const publicPath = path.join(__dirname, "../public");
 app.use("/public", express.static(publicPath));
+app.use("/api/public", express.static(publicPath));
 
 app.use("/api", router);
 

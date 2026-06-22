@@ -1,8 +1,7 @@
 type StudentRow = {
   id: string;
   fullName: string;
-  email: string;
-  phoneNumber: string | null;
+  email?: string | null;
   internshipRole: string;
   startDate: string;
   endDate: string;
@@ -26,6 +25,8 @@ type OfferLetterRow = {
   generatedAt: Date | string;
   fileUrl: string | null;
   status: string;
+  referenceNumber?: string | null;
+  sequenceNumber?: number | null;
 };
 
 type CertificateRow = {
@@ -44,8 +45,7 @@ export function serializeStudent(student: StudentRow) {
   return {
     id: student.id,
     full_name: student.fullName,
-    email: student.email,
-    phone_number: student.phoneNumber,
+    email: student.email ?? null,
     internship_role: student.internshipRole,
     start_date: student.startDate,
     end_date: student.endDate,
@@ -74,6 +74,8 @@ export function serializeOfferLetter(letter: OfferLetterRow, student: StudentRow
     created_at: toIso(letter.generatedAt),
     file_url: letter.fileUrl,
     status: letter.status,
+    reference_number: letter.referenceNumber ?? null,
+    sequence_number: letter.sequenceNumber ?? null,
     student: student ? serializeStudent(student) : null,
   };
 }
@@ -95,13 +97,11 @@ export function parseStudentInput(body: Record<string, unknown>) {
   const internshipRole = String(body.internship_role ?? body.internshipRole ?? "").trim();
   const startDate = String(body.start_date ?? body.startDate ?? "").trim();
   const endDate = String(body.end_date ?? body.endDate ?? "").trim();
-  const email = String(body.email ?? "").trim();
-  const phoneNumber = body.phone_number ?? body.phoneNumber;
+  const email = body.email !== undefined && body.email !== null ? String(body.email).trim() : null;
 
   return {
     fullName,
-    email,
-    phoneNumber: phoneNumber != null && String(phoneNumber).trim() !== "" ? String(phoneNumber) : null,
+    email: email !== "" ? email : null,
     internshipRole,
     startDate,
     endDate,
@@ -111,8 +111,7 @@ export function parseStudentInput(body: Record<string, unknown>) {
 export function parseStudentUpdate(body: Record<string, unknown>) {
   const update: Partial<{
     fullName: string;
-    email: string;
-    phoneNumber: string | null;
+    email: string | null;
     internshipRole: string;
     startDate: string;
     endDate: string;
@@ -121,10 +120,8 @@ export function parseStudentUpdate(body: Record<string, unknown>) {
   if (body.full_name !== undefined || body.fullName !== undefined) {
     update.fullName = String(body.full_name ?? body.fullName).trim();
   }
-  if (body.email !== undefined) update.email = String(body.email).trim();
-  if (body.phone_number !== undefined || body.phoneNumber !== undefined) {
-    const phone = body.phone_number ?? body.phoneNumber;
-    update.phoneNumber = phone != null && String(phone).trim() !== "" ? String(phone) : null;
+  if (body.email !== undefined) {
+    update.email = body.email !== null && String(body.email).trim() !== "" ? String(body.email).trim() : null;
   }
   if (body.internship_role !== undefined || body.internshipRole !== undefined) {
     update.internshipRole = String(body.internship_role ?? body.internshipRole).trim();

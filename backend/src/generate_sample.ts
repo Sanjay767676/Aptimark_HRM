@@ -26,7 +26,7 @@ async function main() {
     hr_name: "Sinega S",
     company_name: "Aptimark Solutions",
     company_tagline: "Smart Solutions . Better Tomorrrow",
-    company_address: "No -8/2 , Venus Garden Street , Sundapalayam , Coimabtore.",
+    company_address: "No -8/2 , Venus Garden Street , Sundapalayam , Coimbatore.",
     company_email: "contact@aptimarksolutions.in",
     company_website: "www.aptimarksolutions.in",
     company_logo: await getBase64Image("Company_Logo.png"),

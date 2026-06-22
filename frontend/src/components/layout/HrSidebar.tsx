@@ -29,7 +29,7 @@ export function HrSidebar() {
 
   return (
     <div className="flex h-full w-64 flex-col bg-sidebar border-r border-sidebar-border text-sidebar-foreground">
-      <div className="flex h-16 shrink-0 items-center gap-3 px-5 border-b border-sidebar-border overflow-hidden">
+      <div className="flex h-16 shrink-0 items-center gap-3 px-5 border-b border-sidebar-border overflow-hidden select-none">
         <img src="/aptimark-logo.png" alt="Aptimark" className="h-8 w-8 object-contain invert shrink-0" />
         <span className="font-bold text-base leading-tight truncate">Aptimark Solutions<sup className="text-[10px] font-normal align-super">™</sup></span>
         <span className="text-sidebar-foreground/40 font-normal text-xs ml-auto shrink-0">HR</span>

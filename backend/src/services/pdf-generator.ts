@@ -42,7 +42,7 @@ export class PdfGeneratorService {
       css: this.templateCss
     };
 
-    const htmlContent = this.compiledTemplate(templateData);
+    const htmlContent = this.compiledTemplate(templateData).replace('/* CSS_PLACEHOLDER */', this.templateCss || '');
 
     const browser = await puppeteer.launch({
       headless: true,
@@ -51,7 +51,13 @@ export class PdfGeneratorService {
 
     try {
       const page = await browser.newPage();
-      await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+      await page.setContent(htmlContent, { waitUntil: 'domcontentloaded' });
+      await page.evaluate(async () => {
+        const doc = (globalThis as { document?: { fonts?: { ready?: Promise<void> } } }).document;
+        if (doc?.fonts?.ready) {
+          await doc.fonts.ready;
+        }
+      });
 
       // Ensure A4 format with no margins to match exact design
       const pdfBuffer = await page.pdf({

@@ -1,98 +1,125 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <title>Offer Letter</title>
-  <!-- The CSS will be injected by the generator -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css?family=Libertinus+Serif&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css?family=Libre+Baskerville&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css?family=Alike&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css?family=Alice&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:wght@600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css?family=Inter&display=swap" rel="stylesheet" />
   <style>
-    {{{css}}}
+    /* CSS_PLACEHOLDER */
   </style>
 </head>
+
 <body>
   <div class="page">
-    <div class="header">
-      <div class="header-left">
-        <div class="logo-container">
-          <img src="{{company_logo}}" alt="Company Logo" class="logo">
-        </div>
-        <div class="company-text">
-          <div class="company-name">Aptimark<br>Solutions</div>
-          <div class="company-tagline-text">{{company_tagline}}</div>
-        </div>
-      </div>
-      <div class="header-right">
-        <table>
-          <tr>
-            <td class="icon-cell"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z'></path><circle cx='12' cy='10' r='3'></circle></svg>" class="header-icon"></td>
-            <td>{{company_address}}</td>
-          </tr>
-          <tr>
-            <td class="icon-cell"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z'></path><polyline points='22,6 12,13 2,6'></polyline></svg>" class="header-icon"></td>
-            <td>{{company_email}}</td>
-          </tr>
-          <tr>
-            <td class="icon-cell"><img src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='12' r='10'></circle><line x1='2' y1='12' x2='22' y2='12'></line><path d='M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z'></path></svg>" class="header-icon"></td>
-            <td>{{company_website}}</td>
-          </tr>
-        </table>
-      </div>
-    </div>
-
+    <!-- Watermark (underneath content) -->
     <div class="watermark">
       <img src="{{watermark_logo}}" alt="Watermark">
     </div>
 
-    <div class="content">
-      <div class="title-section">
+    <header class="header">
+      <div class="header-left">
+        <img src="{{company_logo}}" alt="Company Logo" class="logo">
+        <div class="brand-text">
+          <div class="company-name">Aptimark Solutions</div>
+          <div class="company-tagline">Smart Solutions . Better Tomorrrow</div>
+        </div>
+      </div>
+
+      <div class="header-right">
+        <div class="contact-item">
+          <span class="contact-text">{{address}}</span>
+        </div>
+        <div class="contact-item">
+          <span class="contact-text">{{email}}</span>
+        </div>
+        <div class="contact-item">
+          <span class="contact-text">{{website}}</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="content">
+      <div class="title-container">
         <h1>INTERNSHIP OFFER LETTER</h1>
       </div>
 
-      <div class="ref-date-section">
-        <div class="ref-item">Ref No: {{reference_no}}</div>
-        <div class="ref-item">Date: {{offer_date}}</div>
-      </div>
-
-      <div class="candidate-info">
-        <p><strong>Dear Mr./Ms. {{candidate_name}},</strong></p>
-      </div>
-
-      <div class="body-content">
-        <p>After carefully reviewing your resume, academic background, and technical skills, we are pleased to offer you an internship opportunity in <strong>{{internship_domain}}</strong> at <strong>{{company_name}}</strong> from {{start_date}} to {{end_date}}.</p>
-        
-        <p>We found your profile to be well aligned with our internship requirements and believe that this opportunity will help you gain practical industry exposure and enhance your technical knowledge. Please note that this internship is offered without any stipend and is intended for learning and professional development purposes.</p>
-        
-        <p class="responsibilities-title"><strong>Responsibilities as an Intern ;</strong></p>
-        <p>As an {{internship_domain}} Intern, you will be expected to:</p>
-        <ul>
-          <li>Assist in related projects and assigned tasks.</li>
-          <li>Collaborate with team members on project activities.</li>
-          <li>Learn and apply tools, technologies, and concepts.</li>
-          <li>Complete assigned work within specified deadlines.</li>
-          <li>Participate in team meetings and technical discussions.</li>
-          <li>Maintain professionalism, discipline, and punctuality.</li>
-          <li>Follow company policies and maintain confidentiality of project information.</li>
-        </ul>
-
-        <p>Upon successful completion of the internship and satisfactory performance, an Internship Completion Certificate will be issued.</p>
-        
-        <p>We look forward to having you as part of our team and wish you a successful learning experience.</p>
-      </div>
-
-      <div class="signature-section">
-        <p>Best Regards,</p>
-        <p>{{company_name}}</p>
-        
-        <div class="signature">
-          <img src="{{signature_image}}" alt="Signature">
+      <div class="greeting-block">
+        <div class="greeting-text">Dear {{candidate_name}},</div>
+        <div class="ref-block">
+          <div>Ref No: {{reference_no}}</div>
+          <div>Date: {{date}}</div>
         </div>
-        <p class="hr-name">{{hr_name}}</p>
-        <p class="hr-title">HR | {{company_name}}</p>
       </div>
-    </div>
 
-    <div class="footer">
-      <img src="{{footer_logo}}" alt="Footer Elements" class="footer-img">
+      <section class="body-content">
+        <p>After carefully reviewing your resume, academic background, and technical skills, we are pleased to offer you
+          an internship opportunity in <strong>{{internship_domain}}</strong> at <strong>{{company_name}}</strong> from
+          {{from_date}} to {{to_date}}.</p>
+        <p>We found your profile to be well aligned with our internship requirements and believe that this opportunity
+          will help you gain practical industry exposure and enhance your technical knowledge. Please note that this
+          internship is offered without any stipend and is intended for learning and professional development purposes.
+        </p>
+
+        <p class="responsibilities-title">Responsibilities as an Intern ;</p>
+        <p>As an {{internship_domain}} Intern , you will be expected to:</p>
+        <ul>
+          <li>Participate actively in internship training and project activities.</li>
+          <li>Complete assigned tasks within the given deadlines.</li>
+          <li>Maintain professional conduct and effective communication.</li>
+          <li>Collaborate with mentors and team members as required.</li>
+          <li>Continuously develop technical and professional skills throughout the internship.</li>
+          <li>Submit assigned reports, documentation, and project updates on time.</li>
+          <li>Follow organizational guidelines and internship policies throughout the program.</li>
+        </ul>
+        <p>Upon successful completion of the internship and satisfactory performance, an Internship Completion
+          Certificate will be issued.</p>
+        <p>We look forward to having you as part of our team and wish you a successful learning experience.</p>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="best-regards-block">
+        <p>Best Regards,</p>
+        <p class="signature-company">Aptimark Solutions</p>
+      </div>
+
+      <div class="footer-row">
+        <div class="signature-column">
+          <div class="signature-images">
+            <img src="{{signature_image}}" alt="Signature" class="sig-img">
+          </div>
+          <div class="signatory-name">{{signatory_name}}</div>
+          <div class="signatory-title">HR | Aptimark Solutions</div>
+        </div>
+
+        <div class="signature-column">
+          <div class="signature-images">
+            <img src="{{ceo_signature_image}}" alt="Signature" class="sig-img">
+          </div>
+          <div class="signatory-name">Sanjay K</div>
+          <div class="signatory-title">CEO | Aptimark Solutions</div>
+        </div>
+
+        <div class="footer-badges">
+          <img src="{{msme_logo}}" alt="MSME Logo" class="msme-badge">
+        </div>
+      </div>
+    </footer>
+
+    <!-- Footer Decorative Design Strip -->
+    <div class="footer-design-strip">
+      <img src="{{footer_design}}" alt="Footer Design">
     </div>
   </div>
 </body>
+
 </html>

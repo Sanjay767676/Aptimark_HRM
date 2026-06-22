@@ -103,7 +103,6 @@ export default function StudentsList() {
                 <TableRow key={student.id}>
                   <TableCell className="font-medium">
                     <div>{student.full_name}</div>
-                    <div className="text-xs text-muted-foreground">{student.email}</div>
                   </TableCell>
                   <TableCell>{student.internship_role}</TableCell>
                   <TableCell className="text-sm text-muted-foreground">

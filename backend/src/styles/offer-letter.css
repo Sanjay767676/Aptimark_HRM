@@ -1,140 +1,142 @@
-html, body {
+html,
+body {
   margin: 0;
   padding: 0;
-  height: 100%;
   width: 100%;
-  font-family: "Times New Roman", Times, serif;
+  height: 100%;
+  font-family: "Libertinus Serif", "Times New Roman", serif;
   color: #000;
-  font-size: 13px;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+@page {
+  size: A4;
+  margin: 0;
 }
 
 .page {
   position: relative;
-  width: 100%;
-  height: 100%;
-  padding: 40px 60px;
+  width: 210mm;
+  min-height: 297mm;
   box-sizing: border-box;
-  background-color: white;
+  padding: 30px 40px 90px 40px;
+  background: #ffffff;
 }
 
-/* Header Section */
+/* ---- Watermark ---- */
+.watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0.06;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.watermark img {
+  width: 370px;
+  height: auto;
+}
+
+/* ---- Header ---- */
 .header {
+  position: relative;
+  z-index: 1;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   margin-bottom: 20px;
-  padding-bottom: 10px;
+  padding-bottom: 20px;
 }
 
 .header-left {
   display: flex;
   align-items: center;
-}
-
-.logo-container {
-  margin-right: 15px;
+  gap: 15px;
 }
 
 .logo {
-  max-width: 75px;
-  height: auto;
+  width: 84px;
+  height: 81px;
+  object-fit: contain;
 }
 
-.company-text {
+.brand-text {
   display: flex;
   flex-direction: column;
 }
 
 .company-name {
-  font-size: 32px;
-  font-weight: normal;
-  letter-spacing: 0.5px;
-  font-family: "Times New Roman", Times, serif;
-  color: #002D62;
-  line-height: 1.1;
-}
-
-.company-tagline-text {
-  font-size: 15px;
+  font-family: "Alike", serif;
+  font-size: 24px;
   color: #000;
-  margin-top: 4px;
+  line-height: 1.2;
 }
 
-.header-right {
-  text-align: left;
-  font-size: 12px;
+.company-tagline {
+  font-family: "Alice", serif;
+  font-size: 13px;
   color: #000;
-  border-left: 3px solid #000;
-  padding-left: 15px;
-  margin-left: 20px;
-}
-
-.header-right table {
-  border-collapse: separate;
-  border-spacing: 0 4px;
-  text-align: left;
-}
-
-.icon-cell {
-  width: 20px;
-  vertical-align: middle;
-}
-
-.header-icon {
-  width: 14px;
-  height: 14px;
   margin-top: 2px;
 }
 
-/* Watermark */
-.watermark {
-  position: absolute;
-  top: 55%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  z-index: 0;
-  opacity: 0.08;
-  pointer-events: none;
+.header-right {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 15px;
+  border-left: 2px solid #000;
 }
 
-.watermark img {
-  width: 500px;
-  height: auto;
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-/* Content Area */
+.contact-item .icon {
+  display: none;
+}
+
+.contact-text {
+  font-family: "Alice", serif;
+  font-size: 11px;
+}
+
+/* ---- Content ---- */
 .content {
   position: relative;
   z-index: 1;
-  line-height: 1.5;
 }
 
-.title-section h1 {
+.title-container h1 {
   text-align: center;
-  font-size: 18.5px;
-  font-weight: bold;
+  font-family: "Montserrat", sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 10px 0 15px 0;
+  color: #000;
   text-decoration: underline;
-  margin: 10px 0 20px 0;
-  color: #000;
 }
 
-.ref-date-section {
-  text-align: right;
-  margin-bottom: 10px;
-  font-weight: normal;
-  font-size: 12px;
+.greeting-block {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 20px;
 }
 
-.ref-item {
-  margin-bottom: 2px;
+.greeting-text {
+  font-family: "Libre Baskerville", serif;
   font-weight: bold;
+  font-size: 15px;
 }
 
-.candidate-info {
-  margin-bottom: 10px;
+.ref-block {
   font-size: 13px;
-  font-weight: bold;
-  color: #000;
+  text-align: right;
+  line-height: 1.4;
 }
 
 .body-content {
@@ -142,60 +144,93 @@ html, body {
 }
 
 .body-content p {
-  margin-bottom: 8px;
   margin-top: 0;
+  margin-bottom: 10px;
 }
 
 .responsibilities-title {
-  margin-top: 15px;
+  font-family: "Libre Baskerville", serif;
+  font-weight: bold;
+  font-size: 15px;
+  margin-top: 20px;
   margin-bottom: 5px !important;
-  font-size: 16px;
 }
 
 .body-content ul {
   margin-top: 5px;
   margin-bottom: 10px;
   padding-left: 20px;
-  list-style-type: disc;
 }
 
 .body-content li {
-  margin-bottom: 2px;
-  padding-left: 5px;
+  margin-bottom: 5px;
 }
 
-/* Signature Section */
-.signature-section {
-  margin-top: 20px;
+.footer {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  /* TO MAKE LOGOS GO UPPER OR LOWER: adjust the margin-top below (increase to go lower, decrease to go upper) */
+  margin-top: 65px;
 }
 
-.signature-section p {
-  margin: 0 0 5px 0;
+.best-regards-block p {
+  margin: 0;
+  font-size: 13px;
 }
 
-.signature {
-  margin: 10px 0;
+.signature-company {
+  font-family: "Libertinus Serif", serif;
+  margin-bottom: 10px !important;
 }
 
-.signature img {
-  width: 120px;
+.footer-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  width: 100%;
+}
+
+.signature-column {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.signature-images {
+  position: relative;
+  height: 80px;
+  margin-bottom: 5px;
+}
+
+.sig-img {
+  height: 100%;
+  width: auto;
+}
+
+.signatory-name {
+  font-family: "Libre Baskerville", serif;
+  font-size: 12px;
+  font-weight: normal;
+}
+
+.signatory-title {
+  font-family: "Libre Baskerville", serif;
+  font-size: 11px;
+}
+
+.footer-badges {
+  margin-bottom: 5px;
+}
+
+.msme-badge {
+  max-width: 145px;
   height: auto;
 }
 
-.hr-name {
-  font-weight: normal;
-  margin-top: 0px !important;
-  margin-bottom: 0px !important;
-}
-
-.hr-title {
-  color: #000;
-  font-size: 14.5px;
-  margin-top: 2px !important;
-}
-
-/* Footer Section */
-.footer {
+/* ---- Footer Design Strip ---- */
+.footer-design-strip {
   position: absolute;
   bottom: 0;
   left: 0;
@@ -203,7 +238,7 @@ html, body {
   z-index: 1;
 }
 
-.footer-img {
+.footer-design-strip img {
   width: 100%;
   height: auto;
   display: block;

@@ -83,6 +83,8 @@ function AnimatedRoutes() {
               <AdminLayout>
                 <Switch>
                   <Route path="/admin/dashboard"     component={AdminDashboard} />
+                  <Route path="/admin/students/new"  component={HrNewStudent} />
+                  <Route path="/admin/students/:id"  component={HrStudentDetail} />
                   <Route path="/admin/students"      component={AdminStudents} />
                   <Route path="/admin/payments"      component={AdminPayments} />
                   <Route path="/admin/users"         component={AdminUsers} />
