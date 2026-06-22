@@ -1,7 +1,4 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 interface Props {
   children: ReactNode;
@@ -29,35 +26,20 @@ export class ErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 p-4">
-          <Card className="w-full max-w-lg shadow-lg border-red-200">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-2 mb-4">
-                <AlertCircle className="h-8 w-8 text-red-500 shrink-0" />
-                <h1 className="text-xl font-bold text-gray-900">Something went wrong</h1>
-              </div>
-              <p className="text-sm text-gray-600 mb-4">
-                An unexpected error occurred while rendering the page. Below is the error detail:
-              </p>
-              <div className="bg-red-50 text-red-800 p-3 rounded text-xs font-mono overflow-auto max-h-60 mb-4 border border-red-100">
-                {this.state.error?.toString()}
-                <br />
-                {this.state.error?.stack}
-              </div>
-              <div className="flex gap-2">
-                <Button onClick={() => window.location.reload()} variant="outline">
-                  Reload Page
-                </Button>
-                <Button onClick={() => {
-                  localStorage.clear();
-                  sessionStorage.clear();
-                  window.location.href = "/login";
-                }}>
-                  Clear Cache & Go to Login
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+        <div style={{ padding: "40px", fontFamily: "monospace", color: "#721c24", backgroundColor: "#f8d7da", border: "1px solid #f5c6cb", borderRadius: "4px", margin: "20px" }}>
+          <h1 style={{ fontSize: "24px", margin: "0 0 10px 0" }}>Something went wrong (ErrorBoundary)</h1>
+          <p style={{ margin: "0 0 20px 0" }}>An unexpected error occurred during rendering:</p>
+          <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-all", background: "#fff", padding: "15px", border: "1px solid #ddd", borderRadius: "4px" }}>
+            {this.state.error?.toString()}
+            {"\n\n"}
+            {this.state.error?.stack}
+          </pre>
+          <button onClick={() => window.location.reload()} style={{ padding: "8px 16px", cursor: "pointer", marginRight: "10px" }}>
+            Reload Page
+          </button>
+          <button onClick={() => { localStorage.clear(); sessionStorage.clear(); window.location.href = "/login"; }} style={{ padding: "8px 16px", cursor: "pointer" }}>
+            Clear Cache & Go to Login
+          </button>
         </div>
       );
     }
