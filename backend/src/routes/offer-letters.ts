@@ -14,6 +14,7 @@ import crypto from "crypto";
 const router = Router();
 
 router.get("/offer-letters", async (req, res) => {
+    try {
     const { status, student_id } = req.query as Record<string, string>;
 
     const conditions = [];
@@ -301,10 +302,12 @@ router.patch("/offer-letters/:id", async (req, res): Promise<void> => {
 router.post("/offer-letters/send-email", async (req, res): Promise<void> => {
   try {
     const { ids } = req.body as { ids: string[] };
+
     if (!ids || !ids.length) {
       res.status(400).json({ error: "ids are required" });
       return;
     }
+
     for (const recordId of ids) {
       await emailQueue.addJob({
         id: crypto.randomUUID(),
@@ -314,6 +317,7 @@ router.post("/offer-letters/send-email", async (req, res): Promise<void> => {
         congratsMessage: DEFAULT_MESSAGE,
       });
     }
+
     res.json({ message: "Emails queued successfully" });
   } catch (err) {
     logRouteError(req.log, "Error sending offer letter email", err);
