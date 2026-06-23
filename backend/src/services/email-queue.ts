@@ -59,14 +59,15 @@ class EmailQueueService {
     // Set status to pending in DB immediately
     await this.updateStatus(job.type, job.recordId, "pending");
 
-    try {
-      // Process the email right away
-      await this.processJob(job);
-      await this.updateStatus(job.type, job.recordId, "success");
-    } catch (err) {
-      console.error(`Failed to process email job ${job.id}:`, err);
-      await this.updateStatus(job.type, job.recordId, "failed");
-    }
+    // Start processing in the background without awaiting it, so the HTTP request resolves immediately
+    this.processJob(job)
+      .then(async () => {
+        await this.updateStatus(job.type, job.recordId, "success");
+      })
+      .catch(async (err) => {
+        console.error(`Failed to process email job ${job.id}:`, err);
+        await this.updateStatus(job.type, job.recordId, "failed");
+      });
   }
 
   private async processJob(job: EmailJob) {
