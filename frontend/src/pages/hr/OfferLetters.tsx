@@ -13,8 +13,6 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { apiRequest } from '@/lib/api';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 
 function printOfferLetter(letter: any) {
   const student = letter.student;
@@ -53,10 +51,6 @@ export default function OfferLetters() {
   const queryClient = useQueryClient();
 
   const [selectedMailIds, setSelectedMailIds] = useState<string[]>([]);
-  const [mailOpen, setMailOpen] = useState(false);
-  const [senderEmail, setSenderEmail] = useState('contact@aptimarksolutions.in');
-  const [congratsMsg, setCongratsMsg] = useState('Dear {name},\n\nCongratulations! We are pleased to offer you an internship at Aptimark Solutions. Please find your offer letter attached.\n\nWarm regards,\nHR Department');
-  const [isSendingMail, setIsSendingMail] = useState(false);
 
   const { data: letters, isLoading } = useListOfferLetters({});
   const { data: students } = useListStudents({ limit: 100 });
@@ -129,7 +123,7 @@ export default function OfferLetters() {
     }
   };
 
-  const handleOpenSendMail = () => {
+  const handleSendMail = async () => {
     const missingEmails = selectedMailIds.map(id => {
       const letter = letters?.find((l: any) => l.id === id);
       return letter?.student;
@@ -140,29 +134,19 @@ export default function OfferLetters() {
       return;
     }
 
-    setMailOpen(true);
-  };
-
-  const handleSendMail = async () => {
-    setIsSendingMail(true);
     try {
       await apiRequest('/api/offer-letters/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          ids: selectedMailIds,
-          sender_email: senderEmail,
-          message: congratsMsg
+          ids: selectedMailIds
         })
       });
       toast({ title: 'Emails queued successfully' });
       setSelectedMailIds([]);
-      setMailOpen(false);
       queryClient.invalidateQueries({ queryKey: getListOfferLettersQueryKey({}) });
     } catch (err: any) {
       toast({ title: 'Failed to queue emails', variant: 'destructive' });
-    } finally {
-      setIsSendingMail(false);
     }
   };
 
@@ -203,7 +187,7 @@ export default function OfferLetters() {
         </div>
         <div className="flex gap-2">
           {selectedMailIds.length > 0 && (
-            <Button variant="outline" className="border-primary text-primary hover:bg-primary/5" onClick={handleOpenSendMail}>
+            <Button variant="outline" className="border-primary text-primary hover:bg-primary/5" onClick={handleSendMail}>
               <Mail className="mr-2 h-4 w-4" /> Send Mail ({selectedMailIds.length})
             </Button>
           )}
@@ -392,47 +376,6 @@ export default function OfferLetters() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={mailOpen} onOpenChange={setMailOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Send Congrats Email</DialogTitle>
-            <DialogDescription>
-              Queue congrats emails to the selected {selectedMailIds.length} student(s) with their offer letters attached.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-1">
-              <Label htmlFor="senderEmail">Sender Email Address</Label>
-              <Input
-                id="senderEmail"
-                type="email"
-                placeholder="sender@example.com"
-                value={senderEmail}
-                onChange={(e) => setSenderEmail(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="congratsMessage">Congrats Message</Label>
-              <Textarea
-                id="congratsMessage"
-                rows={6}
-                value={congratsMsg}
-                onChange={(e) => setCongratsMsg(e.target.value)}
-                placeholder="Write your congratulations message here..."
-              />
-              <p className="text-xs text-muted-foreground">
-                You can use <strong>{`{name}`}</strong> as a placeholder for the student's full name.
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setMailOpen(false)} disabled={isSendingMail}>Cancel</Button>
-            <Button onClick={handleSendMail} disabled={isSendingMail || !senderEmail || !congratsMsg}>
-              {isSendingMail ? 'Queueing...' : 'Send Mail'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

@@ -82,7 +82,7 @@ class EmailQueueService {
         .from(offerLettersTable)
         .leftJoin(studentsTable, eq(studentsTable.id, offerLettersTable.studentId))
         .where(eq(offerLettersTable.id, job.recordId));
-      
+
       if (!row || !row.student) throw new Error("Offer letter or student not found");
       studentEmail = row.student.email || "";
       studentName = row.student.fullName;
