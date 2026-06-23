@@ -92,10 +92,17 @@ class EmailQueueService {
     }
 
     // 3. Format message templates
-    const customizedMessage = job.congratsMessage.replace(/{name}/g, studentName);
+    const customizedMessageText = job.congratsMessage.replace(/{name}/g, studentName);
+    const customizedMessageHtml = job.congratsMessage
+      .replace(/{name}/g, `<strong>${studentName}</strong>`)
+      .replace(/Congratulations!/g, "<strong>Congratulations!</strong>")
+      .replace(/Congratulations/g, "<strong>Congratulations</strong>");
 
     // 4. Send email via Resend API
-    const apiKey = process.env.RESEND_API_KEY || "re_HnLcEszv_EPwLKBAzer5hdDpHQooRf2Jt";
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      throw new Error("RESEND_API_KEY is not configured in environment variables.");
+    }
     const fromSender = job.senderEmail || DEFAULT_SENDER;
 
     const response = await fetch("https://api.resend.com/emails", {
@@ -105,12 +112,12 @@ class EmailQueueService {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        from: fromSender,
+        from: `HR | Aptimark Solutions <${fromSender}>`,
         to: studentEmail,
         subject: job.type === "offer-letter" ? "Internship Offer Letter - Aptimark Solutions" : "Certificate of Completion - Aptimark Solutions",
-        text: customizedMessage,
+        text: customizedMessageText,
         html: `<div style="font-family: sans-serif; line-height: 1.6; color: #333;">
-                <p>${customizedMessage.replace(/\n/g, "<br/>")}</p>
+                <p>${customizedMessageHtml.replace(/\n/g, "<br/>")}</p>
                </div>`,
         attachments: [
           {

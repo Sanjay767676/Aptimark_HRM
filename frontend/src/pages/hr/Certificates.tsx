@@ -65,7 +65,15 @@ export default function Certificates() {
 
   const [selectedMailIds, setSelectedMailIds] = useState<string[]>([]);
 
-  const { data: certs, isLoading } = useListCertificates({});
+  const { data: certs, isLoading } = useListCertificates({}, {
+    query: {
+      queryKey: getListCertificatesQueryKey({}),
+      refetchInterval: (query) => {
+        const hasPending = query?.state?.data?.some((cert: any) => cert.email_status === 'pending');
+        return hasPending ? 2000 : false;
+      }
+    }
+  });
   const { data: students } = useListStudents({ limit: 100 });
   const createMutation = useCreateCertificate({
     mutation: {

@@ -52,7 +52,15 @@ export default function OfferLetters() {
 
   const [selectedMailIds, setSelectedMailIds] = useState<string[]>([]);
 
-  const { data: letters, isLoading } = useListOfferLetters({});
+  const { data: letters, isLoading } = useListOfferLetters({}, {
+    query: {
+      queryKey: getListOfferLettersQueryKey({}),
+      refetchInterval: (query) => {
+        const hasPending = query?.state?.data?.some((letter: any) => letter.email_status === 'pending');
+        return hasPending ? 2000 : false;
+      }
+    }
+  });
   const { data: students } = useListStudents({ limit: 100 });
   const createMutation = useCreateOfferLetter({
     mutation: {
