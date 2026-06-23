@@ -23,8 +23,6 @@ interface EmailJob {
 }
 
 class EmailQueueService {
-  private queue: EmailJob[] = [];
-  private isProcessing = false;
   private transporter: nodemailer.Transporter | null = null;
 
   private getTransporter(): nodemailer.Transporter {
@@ -58,33 +56,17 @@ class EmailQueueService {
   }
 
   async addJob(job: EmailJob) {
-    this.queue.push(job);
-    
     // Set status to pending in DB immediately
     await this.updateStatus(job.type, job.recordId, "pending");
 
-    // Trigger queue processing
-    this.processQueue();
-  }
-
-  private async processQueue() {
-    if (this.isProcessing) return;
-    this.isProcessing = true;
-
-    while (this.queue.length > 0) {
-      const job = this.queue.shift();
-      if (!job) continue;
-
-      try {
-        await this.processJob(job);
-        await this.updateStatus(job.type, job.recordId, "success");
-      } catch (err) {
-        console.error(`Failed to process email job ${job.id}:`, err);
-        await this.updateStatus(job.type, job.recordId, "failed");
-      }
+    try {
+      // Process the email right away
+      await this.processJob(job);
+      await this.updateStatus(job.type, job.recordId, "success");
+    } catch (err) {
+      console.error(`Failed to process email job ${job.id}:`, err);
+      await this.updateStatus(job.type, job.recordId, "failed");
     }
-
-    this.isProcessing = false;
   }
 
   private async processJob(job: EmailJob) {
