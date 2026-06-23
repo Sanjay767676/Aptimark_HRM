@@ -13,9 +13,7 @@ import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { apiRequest } from '@/lib/api';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
+
 
 function printCertificate(cert: any) {
   const student = cert.student;
@@ -66,10 +64,6 @@ export default function Certificates() {
   const queryClient = useQueryClient();
 
   const [selectedMailIds, setSelectedMailIds] = useState<string[]>([]);
-  const [mailOpen, setMailOpen] = useState(false);
-  const [senderEmail, setSenderEmail] = useState('contact@aptimarksolutions.in');
-  const [congratsMsg, setCongratsMsg] = useState('Dear {name},\n\nCongratulations! We are pleased to award you the certificate of completion for your internship. Please find it attached.\n\nWarm regards,\nHR Department');
-  const [isSendingMail, setIsSendingMail] = useState(false);
 
   const { data: certs, isLoading } = useListCertificates({});
   const { data: students } = useListStudents({ limit: 100 });
@@ -102,40 +96,20 @@ export default function Certificates() {
     }
   };
 
-  const handleOpenSendMail = () => {
-    const missingEmails = selectedMailIds.map(id => {
-      const cert = certs?.find((c: any) => c.id === id);
-      return cert?.student;
-    }).filter(student => !student?.email);
 
-    if (missingEmails.length > 0) {
-      alert(`The following student(s) do not have a registered email: ${missingEmails.map(s => s?.full_name ?? '').join(', ')}. Please add their email ID first.`);
-      return;
-    }
-
-    setMailOpen(true);
-  };
 
   const handleSendMail = async () => {
-    setIsSendingMail(true);
     try {
       await apiRequest('/api/certificates/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ids: selectedMailIds,
-          sender_email: senderEmail,
-          message: congratsMsg
-        })
+        body: JSON.stringify({ ids: selectedMailIds })
       });
       toast({ title: 'Emails queued successfully' });
       setSelectedMailIds([]);
-      setMailOpen(false);
       queryClient.invalidateQueries({ queryKey: getListCertificatesQueryKey({}) });
     } catch (err: any) {
       toast({ title: 'Failed to queue emails', variant: 'destructive' });
-    } finally {
-      setIsSendingMail(false);
     }
   };
 
@@ -176,7 +150,7 @@ export default function Certificates() {
         </div>
         <div className="flex gap-2">
           {selectedMailIds.length > 0 && (
-            <Button variant="outline" className="border-primary text-primary hover:bg-primary/5" onClick={handleOpenSendMail}>
+            <Button variant="outline" className="border-primary text-primary hover:bg-primary/5" onClick={handleSendMail}>
               <Mail className="mr-2 h-4 w-4" /> Send Mail ({selectedMailIds.length})
             </Button>
           )}
@@ -302,48 +276,6 @@ export default function Certificates() {
               disabled={!selectedStudent || createMutation.isPending}
             >
               {createMutation.isPending ? 'Issuing…' : 'Issue'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={mailOpen} onOpenChange={setMailOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Send Congrats Email</DialogTitle>
-            <DialogDescription>
-              Queue congrats emails to the selected {selectedMailIds.length} student(s) with their certificates attached.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-1">
-              <Label htmlFor="senderEmail">Sender Email Address</Label>
-              <Input
-                id="senderEmail"
-                type="email"
-                placeholder="sender@example.com"
-                value={senderEmail}
-                onChange={(e) => setSenderEmail(e.target.value)}
-              />
-            </div>
-            <div className="space-y-1">
-              <Label htmlFor="congratsMessage">Congrats Message</Label>
-              <Textarea
-                id="congratsMessage"
-                rows={6}
-                value={congratsMsg}
-                onChange={(e) => setCongratsMsg(e.target.value)}
-                placeholder="Write your congratulations message here..."
-              />
-              <p className="text-xs text-muted-foreground">
-                You can use <strong>{`{name}`}</strong> as a placeholder for the student's full name.
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setMailOpen(false)} disabled={isSendingMail}>Cancel</Button>
-            <Button onClick={handleSendMail} disabled={isSendingMail || !senderEmail || !congratsMsg}>
-              {isSendingMail ? 'Queueing...' : 'Send Mail'}
             </Button>
           </DialogFooter>
         </DialogContent>
