@@ -9,7 +9,8 @@ import {
   CreditCard, 
   Settings,
   ShieldAlert,
-  LogOut
+  LogOut,
+  Wallet
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ export function AdminSidebar() {
 
   const navigation = [
     { name: 'Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
+    { name: 'Financials', href: '/admin/financial-dashboard', icon: Wallet },
     { name: 'Payments', href: '/admin/payments', icon: CreditCard },
     { name: 'Users', href: '/admin/users', icon: ShieldAlert },
     { name: 'Settings', href: '/admin/settings', icon: Settings },
