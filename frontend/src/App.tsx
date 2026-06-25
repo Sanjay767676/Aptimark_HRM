@@ -35,6 +35,7 @@ const AdminStudents = lazy(() => import("@/pages/admin/Students"));
 const AdminPayments = lazy(() => import("@/pages/admin/Payments"));
 const AdminUsers = lazy(() => import("@/pages/admin/Users"));
 const AdminSettings = lazy(() => import("@/pages/admin/Settings"));
+const AdminFinancialDashboard = lazy(() => import("@/pages/admin/FinancialDashboard"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -79,7 +80,9 @@ function AnimatedRoutes() {
         <Route path="/hr/settings"><HrPage><HrSettings /></HrPage></Route>
         <Route path="/hr"><Redirect to="/hr/dashboard" /></Route>
 
+
         <Route path="/admin/dashboard"><AdminPage><AdminDashboard /></AdminPage></Route>
+        <Route path="/admin/financial-dashboard"><AdminPage><AdminFinancialDashboard /></AdminPage></Route>
         <Route path="/admin/students/new"><AdminPage><HrNewStudent /></AdminPage></Route>
         <Route path="/admin/students/:id"><AdminPage><HrStudentDetail /></AdminPage></Route>
         <Route path="/admin/students"><AdminPage><AdminStudents /></AdminPage></Route>

@@ -209,3 +209,9 @@
     user-select: none;
   }
 }
+
+@layer utilities {
+  .glass-card {
+    @apply bg-background/60 backdrop-blur-md border border-border shadow-sm;
+  }
+}

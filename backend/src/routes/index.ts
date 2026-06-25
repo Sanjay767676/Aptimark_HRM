@@ -6,6 +6,7 @@ import offerLettersRouter from "./offer-letters";
 import certificatesRouter from "./certificates";
 import usersRouter from "./users";
 import dashboardRouter from "./dashboard";
+import expensesRouter from "./expenses";
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use(offerLettersRouter);
 router.use(certificatesRouter);
 router.use(usersRouter);
 router.use(dashboardRouter);
+router.use(expensesRouter);
 
 export default router;
