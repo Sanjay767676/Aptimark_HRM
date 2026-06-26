@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { db, studentsTable, paymentsTable, offerLettersTable, certificatesTable } from "@workspace/db";
+import { db, studentsTable, paymentsTable, offerLettersTable, certificatesTable, expensesTable } from "@workspace/db";
 import { eq, desc, sql } from "drizzle-orm";
 
 const router = Router();
@@ -41,7 +41,8 @@ router.get("/dashboard/admin-summary", async (req, res) => {
         (SELECT count(*)::int FROM certificates WHERE status = 'issued') AS certificates_issued,
         COALESCE((SELECT SUM(total_fee::numeric) FROM payments), 0) AS total_revenue,
         COALESCE((SELECT SUM(amount_paid::numeric) FROM payments), 0) AS paid_revenue,
-        COALESCE((SELECT SUM(balance_amount::numeric) FROM payments), 0) AS pending_revenue
+        COALESCE((SELECT SUM(balance_amount::numeric) FROM payments), 0) AS pending_revenue,
+        COALESCE((SELECT SUM(amount::numeric) FROM expenses), 0) AS total_expenses
     `);
     const row = result.rows[0];
 
@@ -52,6 +53,7 @@ router.get("/dashboard/admin-summary", async (req, res) => {
       total_revenue: string;
       paid_revenue: string;
       pending_revenue: string;
+      total_expenses: string;
     };
 
     res.json({
@@ -60,6 +62,8 @@ router.get("/dashboard/admin-summary", async (req, res) => {
       total_revenue: parseFloat(summary.total_revenue),
       paid_revenue: parseFloat(summary.paid_revenue),
       pending_revenue: parseFloat(summary.pending_revenue),
+      total_expenses: parseFloat(summary.total_expenses),
+      on_hand_revenue: parseFloat(summary.paid_revenue) - parseFloat(summary.total_expenses),
       offer_letters_generated: summary.offer_letters_generated,
       certificates_issued: summary.certificates_issued,
     });

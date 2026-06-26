@@ -114,7 +114,7 @@ export default function FinancialDashboard() {
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
               ₹{isLoadingSummary ? "..." : (
-                <CountUp from={0} to={summary?.totalRevenue || 0} separator="," duration={1} />
+                <CountUp from={0} to={summary?.totalRevenue || 0} separator="," duration={1} delay={0} className="count-up-text" />
               )}
             </div>
           </CardContent>
@@ -128,7 +128,7 @@ export default function FinancialDashboard() {
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
               ₹{isLoadingSummary ? "..." : (
-                <CountUp from={0} to={summary?.totalExpenses || 0} separator="," duration={1} />
+                <CountUp from={0} to={summary?.totalExpenses || 0} separator="," duration={1} delay={0} className="count-up-text" />
               )}
             </div>
           </CardContent>
@@ -142,7 +142,7 @@ export default function FinancialDashboard() {
           <CardContent>
             <div className="text-3xl font-black text-primary drop-shadow-sm">
               ₹{isLoadingSummary ? "..." : (
-                <CountUp from={0} to={summary?.onHandRevenue || 0} separator="," duration={1} />
+                <CountUp from={0} to={summary?.onHandRevenue || 0} separator="," duration={1} delay={0} className="count-up-text" />
               )}
             </div>
             <p className="text-xs text-muted-foreground mt-1 text-primary/80">

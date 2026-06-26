@@ -51,16 +51,11 @@ router.post("/expenses", async (req, res): Promise<void> => {
 
 router.get("/revenue-summary", async (req, res): Promise<void> => {
   try {
-    const [revenueRow] = await db
-      .select({ total: sql<number>`SUM(CAST(${paymentsTable.amountPaid} AS numeric))` })
-      .from(paymentsTable);
-      
-    const [expensesRow] = await db
-      .select({ total: sql<number>`SUM(CAST(${expensesTable.amount} AS numeric))` })
-      .from(expensesTable);
+    const revResult = await db.execute(sql`SELECT COALESCE(SUM(amount_paid::numeric), 0) AS total FROM payments`);
+    const expResult = await db.execute(sql`SELECT COALESCE(SUM(amount::numeric), 0) AS total FROM expenses`);
 
-    const totalRevenue = Number(revenueRow?.total || 0);
-    const totalExpenses = Number(expensesRow?.total || 0);
+    const totalRevenue = Number(revResult.rows[0]?.total || 0);
+    const totalExpenses = Number(expResult.rows[0]?.total || 0);
     const onHandRevenue = totalRevenue - totalExpenses;
 
     res.json({

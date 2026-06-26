@@ -48,6 +48,13 @@ export default function AdminDashboard() {
       bgColor: "bg-rose-500/10",
     },
     {
+      title: "On Hand Revenue",
+      value: formatCurrency(summary?.on_hand_revenue),
+      icon: IndianRupee,
+      color: "text-violet-500",
+      bgColor: "bg-violet-500/10",
+    },
+    {
       title: "Offer Letters",
       value: summary?.offer_letters_generated ?? 0,
       icon: FileText,
