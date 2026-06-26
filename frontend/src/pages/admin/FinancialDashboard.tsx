@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { DollarSign, TrendingDown, TrendingUp } from "lucide-react";
+import { IndianRupee, TrendingDown, TrendingUp } from "lucide-react";
 import { format } from "date-fns";
+import CountUp from "@/components/ui/CountUp";
 
 export default function FinancialDashboard() {
   const queryClient = useQueryClient();
@@ -35,7 +36,7 @@ export default function FinancialDashboard() {
       
       toast({
         title: "New Expense Logged",
-        description: `Expense: ${newExpense.itemPurchased} ($${newExpense.amount})`,
+        description: `Expense: ${newExpense.itemPurchased} (₹${newExpense.amount})`,
       });
     });
 
@@ -112,7 +113,9 @@ export default function FinancialDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-green-600">
-              ${isLoadingSummary ? "..." : summary?.totalRevenue?.toFixed(2) || "0.00"}
+              ₹{isLoadingSummary ? "..." : (
+                <CountUp from={0} to={summary?.totalRevenue || 0} separator="," duration={1} />
+              )}
             </div>
           </CardContent>
         </Card>
@@ -124,7 +127,9 @@ export default function FinancialDashboard() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              ${isLoadingSummary ? "..." : summary?.totalExpenses?.toFixed(2) || "0.00"}
+              ₹{isLoadingSummary ? "..." : (
+                <CountUp from={0} to={summary?.totalExpenses || 0} separator="," duration={1} />
+              )}
             </div>
           </CardContent>
         </Card>
@@ -132,11 +137,13 @@ export default function FinancialDashboard() {
         <Card className="glass-card bg-primary/5 border-primary/20">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-bold text-primary">On Hand Revenue</CardTitle>
-            <DollarSign className="h-4 w-4 text-primary" />
+            <IndianRupee className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-black text-primary drop-shadow-sm">
-              ${isLoadingSummary ? "..." : summary?.onHandRevenue?.toFixed(2) || "0.00"}
+              ₹{isLoadingSummary ? "..." : (
+                <CountUp from={0} to={summary?.onHandRevenue || 0} separator="," duration={1} />
+              )}
             </div>
             <p className="text-xs text-muted-foreground mt-1 text-primary/80">
               After all expenses
@@ -163,7 +170,7 @@ export default function FinancialDashboard() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="amount">Amount ($)</Label>
+                <Label htmlFor="amount">Amount (₹)</Label>
                 <Input
                   id="amount"
                   type="number"
@@ -211,7 +218,7 @@ export default function FinancialDashboard() {
                       </p>
                     </div>
                     <div className="font-bold text-red-500">
-                      -${Number(expense.amount).toFixed(2)}
+                      -₹{Number(expense.amount).toFixed(2)}
                     </div>
                   </div>
                 ))}
