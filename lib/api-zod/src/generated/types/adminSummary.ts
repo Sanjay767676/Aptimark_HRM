@@ -12,6 +12,8 @@ export interface AdminSummary {
   total_revenue: number;
   paid_revenue: number;
   pending_revenue: number;
+  total_expenses?: number;
+  on_hand_revenue?: number;
   offer_letters_generated: number;
   certificates_issued: number;
 }
