@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { db, certificatesTable, studentsTable } from "@workspace/db";
-import { eq, and } from "drizzle-orm";
+import { db, certificatesTable, studentsTable, offerLettersTable } from "@workspace/db";
+import { eq, and, desc } from "drizzle-orm";
 import { serializeCertificate } from "../lib/serialize";
 import { logRouteError } from "../lib/log-route-error";
 import { deleteSupabaseFile } from "../lib/supabase-storage";
@@ -52,12 +52,22 @@ router.post("/certificates", async (req, res): Promise<void> => {
       return;
     }
 
+    const [existingLetter] = await db
+      .select()
+      .from(offerLettersTable)
+      .where(eq(offerLettersTable.studentId, student_id))
+      .orderBy(desc(offerLettersTable.generatedAt))
+      .limit(1);
+
+    const referenceNo = existingLetter?.referenceNumber ?? `AMS/HR/INT/${new Date(student.startDate).getFullYear()}/`;
+
     const pdfData = {
       candidate_name: student.fullName,
       internship_domain: student.internshipRole,
+      reference_no: referenceNo,
       from_date: new Date(student.startDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
       to_date: new Date(student.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
-      issue_date: new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      issue_date: new Date(student.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
     };
 
     const pdfBuffer = await pdfGenerator.generateCertificate(pdfData);

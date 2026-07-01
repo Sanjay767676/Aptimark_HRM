@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { getListCertificatesQueryKey, useListCertificates, useCreateCertificate, useListStudents } from '@workspace/api-client-react';
+import { getListCertificatesQueryKey, useListCertificates, useCreateCertificate, useListStudents, useListOfferLetters } from '@workspace/api-client-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
@@ -15,15 +16,18 @@ import { motion } from 'framer-motion';
 import { apiRequest } from '@/lib/api';
 
 
-function printCertificate(cert: any) {
+function printCertificate(cert: any, offerLetters: any[] = []) {
   const student = cert.student;
   const win = window.open('', '_blank');
   if (!win) return;
   
-  const issueDate = cert.created_at ? format(new Date(cert.created_at), 'dd/MM/yy') : '—';
+  const issueDate = student?.end_date ? format(new Date(student.end_date), 'dd/MM/yy') : (cert.created_at ? format(new Date(cert.created_at), 'dd/MM/yy') : '—');
   const start = student?.start_date ? format(new Date(student.start_date), 'MMMM d, yyyy') : '—';
   const end = student?.end_date ? format(new Date(student.end_date), 'MMMM d, yyyy') : '—';
   const year = new Date().getFullYear();
+  
+  const studentOffer = offerLetters?.find((o: any) => o.student_id === student?.id);
+  const refNo = studentOffer?.reference_number || `AMS/HR/INT/${year}/`;
   
   win.document.write(`
     <!DOCTYPE html><html><head><title>Certificate of Completion</title>
@@ -94,7 +98,7 @@ function printCertificate(cert: any) {
         <span class="v16_103">www.aptimarksolutions.in</span>
         <span class="v16_104">contact@aptimarksolutions.in</span>
         <div class="v16_106"><div class="v16_107"></div><span class="v16_108">TO WHOMSOEVER IT MAY  CONCERN</span></div>
-        <span class="v16_111">Ref No: AMS/HR/INT/${year}/<br>Date:  ${issueDate}</span>
+        <span class="v16_111">Ref No: ${refNo}<br>Date:  ${issueDate}</span>
       </div>
       <span class="v18_3">For Aptimark Solutions</span>
     </div>
@@ -107,21 +111,21 @@ function printCertificate(cert: any) {
 
 export default function Certificates() {
   const [open, setOpen] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState('');
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isGeneratingBulk, setIsGeneratingBulk] = useState(false);
+  const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const { data: certs, isLoading } = useListCertificates({});
   const { data: students } = useListStudents({ limit: 100 });
+  const { data: offerLetters } = useListOfferLetters({});
   const createMutation = useCreateCertificate({
     mutation: {
       onSuccess: () => {
-        toast({ title: 'Certificate issued successfully' });
         queryClient.invalidateQueries({ queryKey: getListCertificatesQueryKey({}) });
-        setOpen(false);
-        setSelectedStudent('');
       },
-      onError: () => toast({ title: 'Failed to issue certificate', variant: 'destructive' }),
     },
   });
 
@@ -142,7 +146,50 @@ export default function Certificates() {
     }
   };
 
+  const filteredStudents = students?.data.filter((s: any) => 
+    s.payment?.payment_status === 'paid' && 
+    (s.full_name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+     s.internship_role.toLowerCase().includes(searchQuery.toLowerCase()))
+  ) || [];
 
+  const handleGenerate = async () => {
+    if (selectedStudents.length === 0) return;
+    setIsGeneratingBulk(true);
+    setBulkProgress({ current: 0, total: selectedStudents.length });
+    
+    let successCount = 0;
+    let failCount = 0;
+
+    for (let i = 0; i < selectedStudents.length; i++) {
+      const studentId = selectedStudents[i];
+      setBulkProgress({ current: i + 1, total: selectedStudents.length });
+      try {
+        await createMutation.mutateAsync({ data: { student_id: studentId } });
+        successCount++;
+      } catch (err) {
+        failCount++;
+      }
+    }
+
+    setIsGeneratingBulk(false);
+    setSelectedStudents([]);
+    setOpen(false);
+    
+    toast({
+      title: 'Bulk issue complete',
+      description: `Successfully issued ${successCount} certificate(s).${failCount > 0 ? ` Failed: ${failCount}` : ''}`,
+    });
+    queryClient.invalidateQueries({ queryKey: getListCertificatesQueryKey({}) });
+  };
+
+  const handleOpenChange = (isOpen: boolean) => {
+    if (isGeneratingBulk) return;
+    setOpen(isOpen);
+    if (!isOpen) {
+      setSelectedStudents([]);
+      setSearchQuery('');
+    }
+  };
 
   const getEmailStatusDot = (status: string) => {
     return <span className="text-xs text-muted-foreground">—</span>;
@@ -206,7 +253,7 @@ export default function Certificates() {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
-                        <Button variant="ghost" size="icon" onClick={() => printCertificate(cert)}>
+                        <Button variant="ghost" size="icon" onClick={() => printCertificate(cert, offerLetters || [])}>
                           <Printer className="h-4 w-4" />
                         </Button>
                         <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => handleDelete(cert.id)} disabled={deleteMutation.isPending}>
@@ -222,30 +269,88 @@ export default function Certificates() {
         </div>
       </motion.div>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Issue Certificate</DialogTitle>
+            <DialogDescription>
+              Select students who have fully paid their fees to issue certificates.
+            </DialogDescription>
           </DialogHeader>
-          <div className="py-2">
-            <Select value={selectedStudent} onValueChange={setSelectedStudent}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a student…" />
-              </SelectTrigger>
-              <SelectContent position="popper" className="max-h-[300px] overflow-y-auto">
-                {students?.data?.filter((s: any) => s.payment?.payment_status === 'paid').map((s: any) => (
-                  <SelectItem key={s.id} value={s.id}>{s.full_name} — {s.internship_role}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="py-2 space-y-4">
+            <Input
+              placeholder="Search students..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              disabled={isGeneratingBulk}
+            />
+
+            <div className="border rounded-md p-3 max-h-60 overflow-y-auto space-y-2">
+              <div className="flex items-center space-x-2 border-b pb-2 mb-2">
+                <input
+                  type="checkbox"
+                  id="select-all"
+                  className="rounded border-gray-300 accent-primary w-4 h-4 cursor-pointer"
+                  checked={filteredStudents.length > 0 && selectedStudents.length === filteredStudents.length}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedStudents(filteredStudents.map((s: any) => s.id));
+                    } else {
+                      setSelectedStudents([]);
+                    }
+                  }}
+                  disabled={isGeneratingBulk}
+                />
+                <label htmlFor="select-all" className="text-sm font-semibold cursor-pointer select-none">
+                  Select All / Deselect All
+                </label>
+              </div>
+
+              {filteredStudents.map((s: any) => {
+                const isChecked = selectedStudents.includes(s.id);
+                return (
+                  <div key={s.id} className="flex items-center space-x-2 py-1">
+                    <input
+                      type="checkbox"
+                      id={`student-${s.id}`}
+                      className="rounded border-gray-300 accent-primary w-4 h-4 cursor-pointer"
+                      checked={isChecked}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedStudents([...selectedStudents, s.id]);
+                        } else {
+                          setSelectedStudents(selectedStudents.filter((id) => id !== s.id));
+                        }
+                      }}
+                      disabled={isGeneratingBulk}
+                    />
+                    <label htmlFor={`student-${s.id}`} className="text-sm cursor-pointer select-none flex-1">
+                      {s.full_name} <span className="text-muted-foreground text-xs">— {s.internship_role}</span>
+                    </label>
+                  </div>
+                );
+              })}
+
+              {filteredStudents.length === 0 && (
+                <div className="text-center text-sm text-muted-foreground py-4">
+                  No eligible students found.
+                </div>
+              )}
+            </div>
+
+            {isGeneratingBulk && (
+              <div className="text-sm text-center text-muted-foreground animate-pulse">
+                Issuing {bulkProgress.current} of {bulkProgress.total} certificates...
+              </div>
+            )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => handleOpenChange(false)} disabled={isGeneratingBulk}>Cancel</Button>
             <Button
-              onClick={() => createMutation.mutate({ data: { student_id: selectedStudent } })}
-              disabled={!selectedStudent || createMutation.isPending}
+              onClick={handleGenerate}
+              disabled={selectedStudents.length === 0 || isGeneratingBulk}
             >
-              {createMutation.isPending ? 'Issuing…' : 'Issue'}
+              {isGeneratingBulk ? 'Issuing…' : `Issue (${selectedStudents.length})`}
             </Button>
           </DialogFooter>
         </DialogContent>
