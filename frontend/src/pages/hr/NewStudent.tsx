@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { DatePicker } from '@/components/ui/date-picker';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, FileSpreadsheet, Upload } from 'lucide-react';
 
@@ -18,6 +19,7 @@ const studentSchema = z.object({
   full_name: z.string().min(1, 'Name is required'),
   email: z.string().email('Invalid email address').optional().or(z.literal('')),
   internship_role: z.string().min(1, 'Role is required'),
+  duration: z.string().min(1, 'Duration is required'),
   start_date: z.string().min(1, 'Start date is required'),
   end_date: z.string().min(1, 'End date is required'),
   total_fee: z.preprocess(
@@ -151,6 +153,7 @@ export default function NewStudent() {
       full_name: '',
       email: '',
       internship_role: '',
+      duration: '',
       start_date: new Date().toISOString().split('T')[0],
       end_date: new Date(new Date().setMonth(new Date().getMonth() + 3)).toISOString().split('T')[0],
       total_fee: undefined,
@@ -355,6 +358,31 @@ export default function NewStudent() {
                       <FormLabel>Email Address (Optional)</FormLabel>
                       <FormControl>
                         <Input {...field} type="email" placeholder="email@example.com" data-testid="input-email" />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="duration"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Duration</FormLabel>
+                      <FormControl>
+                        <Select value={field.value} onValueChange={field.onChange}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select duration" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="15 Days">15 Days</SelectItem>
+                            <SelectItem value="30 Days">30 Days</SelectItem>
+                            <SelectItem value="45 Days">45 Days</SelectItem>
+                            <SelectItem value="60 Days">60 Days</SelectItem>
+                            <SelectItem value="90 Days">90 Days</SelectItem>
+                          </SelectContent>
+                        </Select>
                       </FormControl>
                       <FormMessage />
                     </FormItem>

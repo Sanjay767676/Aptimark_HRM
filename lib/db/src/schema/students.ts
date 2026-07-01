@@ -7,6 +7,7 @@ export const studentsTable = pgTable("students", {
   fullName: text("full_name").notNull(),
   email: text("email"),
   internshipRole: text("internship_role").notNull(),
+  duration: text("duration"),
   startDate: text("start_date").notNull(),
   endDate: text("end_date").notNull(),
   createdBy: text("created_by"),

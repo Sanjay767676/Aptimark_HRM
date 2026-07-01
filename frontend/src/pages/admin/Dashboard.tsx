@@ -49,7 +49,7 @@ export default function AdminDashboard() {
     },
     {
       title: "On Hand Revenue",
-      value: formatCurrency(summary?.on_hand_revenue),
+      value: formatCurrency((summary?.paid_revenue ?? 0) - (summary?.total_expenses ?? 0)),
       icon: IndianRupee,
       color: "text-violet-500",
       bgColor: "bg-violet-500/10",

@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { DatePicker } from '@/components/ui/date-picker';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, User, CreditCard } from 'lucide-react';
@@ -19,6 +20,7 @@ const studentUpdateSchema = z.object({
   full_name: z.string().min(1, 'Name is required'),
   email: z.string().email('Invalid email address').optional().or(z.literal('')),
   internship_role: z.string().min(1, 'Role is required'),
+  duration: z.string().min(1, 'Duration is required'),
   start_date: z.string().min(1, 'Start date is required'),
   end_date: z.string().min(1, 'End date is required'),
 });
@@ -64,6 +66,7 @@ export default function StudentDetail() {
         full_name: student.full_name,
         email: student.email ?? '',
         internship_role: student.internship_role,
+        duration: student.duration ?? '',
         start_date: student.start_date.split('T')[0],
         end_date: student.end_date.split('T')[0],
       });
@@ -176,6 +179,30 @@ export default function StudentDetail() {
                          </FormItem>
                        )}
                      />
+                     <FormField
+                      control={studentForm.control}
+                      name="duration"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Duration</FormLabel>
+                          <FormControl>
+                            <Select value={field.value} onValueChange={field.onChange}>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select duration" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="15 Days">15 Days</SelectItem>
+                                <SelectItem value="30 Days">30 Days</SelectItem>
+                                <SelectItem value="45 Days">45 Days</SelectItem>
+                                <SelectItem value="60 Days">60 Days</SelectItem>
+                                <SelectItem value="90 Days">90 Days</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                      <FormField
                       control={studentForm.control}
                       name="start_date"
