@@ -8,13 +8,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Award, Plus, Printer, Trash2, FileText } from 'lucide-react';
+import { Award, Plus, Printer, Trash2, FileText, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { apiRequest } from '@/lib/api';
-
-
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 export default function AdminCertificates() {
   const [open, setOpen] = useState(false);
@@ -22,6 +22,8 @@ export default function AdminCertificates() {
   const [searchQuery, setSearchQuery] = useState('');
   const [isGeneratingBulk, setIsGeneratingBulk] = useState(false);
   const [bulkProgress, setBulkProgress] = useState({ current: 0, total: 0 });
+  const [selectedGeneratedCerts, setSelectedGeneratedCerts] = useState<string[]>([]);
+  const [isDownloading, setIsDownloading] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -98,6 +100,39 @@ export default function AdminCertificates() {
     }
   };
 
+  const handleDownloadZip = async () => {
+    if (selectedGeneratedCerts.length === 0 || !certs) return;
+    
+    setIsDownloading(true);
+    const zip = new JSZip();
+    
+    toast({ title: 'Preparing ZIP file...', description: `Fetching ${selectedGeneratedCerts.length} certificates.` });
+    
+    try {
+      const selectedCertsData = certs.filter((c: any) => selectedGeneratedCerts.includes(c.id) && c.file_url);
+      
+      for (const cert of selectedCertsData) {
+        const response = await fetch(cert.file_url as string);
+        if (!response.ok) throw new Error(`Failed to fetch ${cert.student?.full_name}'s certificate`);
+        const blob = await response.blob();
+        
+        const safeName = (cert.student?.full_name || 'unknown').toLowerCase().replace(/[^a-z0-9]+/g, '_');
+        zip.file(`${safeName}_certificate.pdf`, blob);
+      }
+      
+      const zipBlob = await zip.generateAsync({ type: 'blob' });
+      saveAs(zipBlob, `certificates_batch_${format(new Date(), 'yyyy-MM-dd')}.zip`);
+      
+      toast({ title: 'Download Complete', description: 'Your ZIP file has been downloaded successfully.' });
+      setSelectedGeneratedCerts([]); // Clear selection after successful download
+    } catch (error) {
+      console.error(error);
+      toast({ title: 'Download Failed', description: 'Failed to create ZIP file. Please try again.', variant: 'destructive' });
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -105,7 +140,13 @@ export default function AdminCertificates() {
           <h1 className="text-2xl font-bold tracking-tight">Certificates</h1>
           <p className="text-muted-foreground">Issue and print internship completion certificates.</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap">
+          {selectedGeneratedCerts.length > 0 && (
+            <Button variant="outline" onClick={handleDownloadZip} disabled={isDownloading}>
+              <Download className="mr-2 h-4 w-4" /> 
+              {isDownloading ? 'Zipping...' : `Download ${selectedGeneratedCerts.length} as ZIP`}
+            </Button>
+          )}
           <Button onClick={() => setOpen(true)}>
             <Plus className="mr-2 h-4 w-4" /> Issue Certificate
           </Button>
@@ -117,6 +158,20 @@ export default function AdminCertificates() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[50px]">
+                  <input 
+                    type="checkbox" 
+                    className="rounded border-gray-300 accent-primary w-4 h-4 cursor-pointer"
+                    checked={(certs?.length ?? 0) > 0 && selectedGeneratedCerts.length === (certs?.length ?? 0)}
+                    onChange={(e) => {
+                      if (e.target.checked && certs) {
+                        setSelectedGeneratedCerts(certs.map((c: any) => c.id));
+                      } else {
+                        setSelectedGeneratedCerts([]);
+                      }
+                    }}
+                  />
+                </TableHead>
                 <TableHead>Student</TableHead>
                 <TableHead>Internship Role</TableHead>
                 <TableHead>Status</TableHead>
@@ -141,6 +196,20 @@ export default function AdminCertificates() {
               ) : (
                 certs.map((cert: any) => (
                   <TableRow key={cert.id}>
+                    <TableCell>
+                      <input 
+                        type="checkbox" 
+                        className="rounded border-gray-300 accent-primary w-4 h-4 cursor-pointer"
+                        checked={selectedGeneratedCerts.includes(cert.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedGeneratedCerts(prev => [...prev, cert.id]);
+                          } else {
+                            setSelectedGeneratedCerts(prev => prev.filter(id => id !== cert.id));
+                          }
+                        }}
+                      />
+                    </TableCell>
                     <TableCell className="font-medium">
                       <div>{cert.student?.full_name ?? '—'}</div>
                       <div className="text-xs text-muted-foreground">{cert.student?.email}</div>
