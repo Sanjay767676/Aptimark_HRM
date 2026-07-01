@@ -52,6 +52,17 @@ router.post("/certificates", async (req, res): Promise<void> => {
       return;
     }
 
+    const getBase64Image = async (filename: string) => {
+      try {
+        const filePath = path.join(process.cwd(), "src/placeholders", filename);
+        const data = await fs.readFile(filePath);
+        return `data:image/png;base64,${data.toString("base64")}`;
+      } catch (err) {
+        req.log.warn(`Could not read image ${filename}: ${err}`);
+        return "";
+      }
+    };
+
     const [existingLetter] = await db
       .select()
       .from(offerLettersTable)
@@ -64,10 +75,19 @@ router.post("/certificates", async (req, res): Promise<void> => {
     const pdfData = {
       candidate_name: student.fullName,
       internship_domain: student.internshipRole,
+      duration: student.duration ?? "30 Days",
+      company_name: "Aptimark Solutions",
       reference_no: referenceNo,
       from_date: new Date(student.startDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
       to_date: new Date(student.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
       issue_date: new Date(student.endDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }),
+      company_logo: await getBase64Image("Company_Logo.png"),
+      watermark_logo: await getBase64Image("Watermark.png"),
+      msme_logo: await getBase64Image("Fotter.png"),
+      footer_design: await getBase64Image("Fotterdesign.png"),
+      address: "No -8/2 , Venus Garden Street , Sundapalayam , Coimbatore.",
+      email: "contact@aptimarksolutions.in",
+      website: "www.aptimarksolutions.in",
     };
 
     const pdfBuffer = await pdfGenerator.generateCertificate(pdfData);

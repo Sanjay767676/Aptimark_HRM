@@ -89,7 +89,12 @@ export class PdfGeneratorService {
       throw new Error('Certificate template not initialized');
     }
 
-    const htmlContent = this.compiledCertificateTemplate(data);
+    const templateData = {
+      ...data,
+      css: this.templateCss
+    };
+
+    const htmlContent = this.compiledCertificateTemplate(templateData).replace('/* CSS_PLACEHOLDER */', this.templateCss || '');
 
     const browser = await puppeteer.launch({
       headless: true,
