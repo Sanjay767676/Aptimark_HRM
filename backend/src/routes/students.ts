@@ -85,6 +85,7 @@ router.post("/students", async (req, res): Promise<void> => {
         fullName: studentData.fullName,
         email: studentData.email,
         internshipRole: studentData.internshipRole,
+        duration: studentData.duration,
         startDate: studentData.startDate,
         endDate: studentData.endDate,
       })

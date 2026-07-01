@@ -232,7 +232,7 @@ export default function Certificates() {
               <SelectTrigger>
                 <SelectValue placeholder="Select a student…" />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent position="popper" className="max-h-[300px] overflow-y-auto">
                 {students?.data?.filter((s: any) => s.payment?.payment_status === 'paid').map((s: any) => (
                   <SelectItem key={s.id} value={s.id}>{s.full_name} — {s.internship_role}</SelectItem>
                 ))}

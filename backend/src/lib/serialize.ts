@@ -3,6 +3,7 @@ type StudentRow = {
   fullName: string;
   email?: string | null;
   internshipRole: string;
+  duration?: string | null;
   startDate: string;
   endDate: string;
   createdBy?: string | null;
@@ -47,6 +48,7 @@ export function serializeStudent(student: StudentRow) {
     full_name: student.fullName,
     email: student.email ?? null,
     internship_role: student.internshipRole,
+    duration: student.duration ?? null,
     start_date: student.startDate,
     end_date: student.endDate,
     created_by: student.createdBy ?? null,
@@ -97,6 +99,7 @@ export function serializeCertificate(cert: CertificateRow, student: StudentRow |
 export function parseStudentInput(body: Record<string, unknown>) {
   const fullName = String(body.full_name ?? body.fullName ?? "").trim();
   const internshipRole = String(body.internship_role ?? body.internshipRole ?? "").trim();
+  const duration = body.duration ? String(body.duration).trim() : null;
   const startDate = String(body.start_date ?? body.startDate ?? "").trim();
   const endDate = String(body.end_date ?? body.endDate ?? "").trim();
   const email = body.email !== undefined && body.email !== null ? String(body.email).trim() : null;
@@ -105,6 +108,7 @@ export function parseStudentInput(body: Record<string, unknown>) {
     fullName,
     email: email !== "" ? email : null,
     internshipRole,
+    duration,
     startDate,
     endDate,
   };
@@ -115,6 +119,7 @@ export function parseStudentUpdate(body: Record<string, unknown>) {
     fullName: string;
     email: string | null;
     internshipRole: string;
+    duration: string | null;
     startDate: string;
     endDate: string;
   }> = {};
@@ -127,6 +132,9 @@ export function parseStudentUpdate(body: Record<string, unknown>) {
   }
   if (body.internship_role !== undefined || body.internshipRole !== undefined) {
     update.internshipRole = String(body.internship_role ?? body.internshipRole).trim();
+  }
+  if (body.duration !== undefined) {
+    update.duration = body.duration !== null && String(body.duration).trim() !== "" ? String(body.duration).trim() : null;
   }
   if (body.start_date !== undefined || body.startDate !== undefined) {
     update.startDate = String(body.start_date ?? body.startDate).trim();
